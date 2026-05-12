@@ -1,0 +1,20 @@
+{
+  "id": "fixture_email_empty",
+  "source": "local_fixture",
+  "repo_url": "examples/fixtures/python_email_validator",
+  "title": "Reject empty email values",
+  "body": "The validator currently accepts an empty email string. Reproduce the failing validation test, patch the validator, and rerun focused tests.",
+  "labels": ["bug", "fixture", "ci-failure"],
+  "base_branch": "main",
+  "allowed_paths": ["src/**", "tests/**"],
+  "blocked_paths": [".github/**", ".env*", "*lock*", "secrets/**"],
+  "max_attempts": 2,
+  "focused_test_command": "python -m pytest tests/test_validation.py",
+  "expected_relevant_files": [
+    "src/email_validator_app/validation.py",
+    "tests/test_validation.py"
+  ],
+  "expected_changed_files": [
+    "src/email_validator_app/validation.py"
+  ]
+}
