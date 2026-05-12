@@ -1,0 +1,8 @@
+max_attempts: 3
+max_changed_files: 6
+max_diff_lines: 300
+blocked_paths:
+  - ".github/**"
+  - ".env*"
+  - "*lock*"
+  - "secrets/**"
