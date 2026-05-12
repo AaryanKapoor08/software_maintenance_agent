@@ -1,0 +1,11 @@
+{
+  "name": "mvp-fixture-suite",
+  "tasks": [
+    {
+      "task_file": "../../examples/tasks/python_email_empty.json"
+    },
+    {
+      "task_file": "../../examples/tasks/python_email_repair.json"
+    }
+  ]
+}
