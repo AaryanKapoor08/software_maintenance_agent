@@ -1,6 +1,6 @@
-# PatchPilot Build Plan
+# software_maintaince agent Build Plan
 
-PatchPilot turns failing CI and bounded maintenance issues into small, tested, reviewable draft-PR-ready patches with execution traces, risk scoring, rollback notes, and benchmarked retrieval.
+software_maintaince agent turns failing CI and bounded maintenance issues into small, tested, reviewable draft-PR-ready patches with execution traces, risk scoring, rollback notes, and benchmarked retrieval.
 
 ## Operating Rules
 
@@ -39,9 +39,9 @@ PatchPilot turns failing CI and bounded maintenance issues into small, tested, r
 ```bash
 python -m pip install -e ".[dev]"
 python -m pytest
-python -m patchpilot.cli run --task examples/tasks/python_email_empty.json --sandbox local
-python -m patchpilot.cli benchmark --suite benchmark/suites/mvp.json
-python -m patchpilot.cli dashboard --port 8765
+python -m software_maintaince_agent.cli run --task examples/tasks/python_email_empty.json --sandbox local
+python -m software_maintaince_agent.cli benchmark --suite benchmark/suites/mvp.json
+python -m software_maintaince_agent.cli dashboard --port 8765
 ```
 
 ## Minimum Product Proof

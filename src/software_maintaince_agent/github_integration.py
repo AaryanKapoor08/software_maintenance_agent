@@ -6,8 +6,8 @@ import re
 import urllib.request
 from dataclasses import dataclass
 
-from patchpilot.models import MaintenanceTask
-from patchpilot.redaction import redact
+from software_maintaince_agent.models import MaintenanceTask
+from software_maintaince_agent.redaction import redact
 
 ISSUE_RE = re.compile(r"https://github\.com/([^/]+)/([^/]+)/issues/(\d+)")
 

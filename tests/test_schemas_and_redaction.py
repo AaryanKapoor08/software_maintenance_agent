@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from patchpilot.models import MaintenanceTask
-from patchpilot.redaction import redact
+from software_maintaince_agent.models import MaintenanceTask
+from software_maintaince_agent.redaction import redact
 
 
 def test_task_schema_validates_attempt_limit() -> None:

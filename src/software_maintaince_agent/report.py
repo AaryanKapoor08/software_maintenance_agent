@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.models import FinalReport, RiskReport
+from software_maintaince_agent.models import FinalReport, RiskReport
 
 
 def render_final_report(report: FinalReport, risk: RiskReport) -> str:
@@ -13,7 +13,7 @@ def render_final_report(report: FinalReport, risk: RiskReport) -> str:
     ] or ["1. No test command available."]
     known_limitations = [f"- {item}" for item in report.known_limitations] or ["- None"]
     lines = [
-        "# PatchPilot Final Report",
+        "# software_maintaince agent Final Report",
         "",
         f"Status: **{report.status}**",
         f"Risk: **{report.risk_level}** ({risk.score}/100)",

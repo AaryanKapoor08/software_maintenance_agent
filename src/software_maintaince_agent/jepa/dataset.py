@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.agent import load_task
-from patchpilot.jepa.predictor import CodeJepaExample
-from patchpilot.retrieval import file_text
+from software_maintaince_agent.agent import load_task
+from software_maintaince_agent.jepa.predictor import CodeJepaExample
+from software_maintaince_agent.retrieval import file_text
 
 
 def examples_from_task_files(task_files: list[Path]) -> list[CodeJepaExample]:

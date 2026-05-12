@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.evals.benchmark import run_retrieval_benchmark
+from software_maintaince_agent.evals.benchmark import run_retrieval_benchmark
 
 
 def test_benchmark_writes_report(tmp_path: Path) -> None:

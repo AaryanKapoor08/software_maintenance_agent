@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.command_policy import CommandPolicy
+from software_maintaince_agent.command_policy import CommandPolicy
 
 
 def test_policy_allows_pytest() -> None:

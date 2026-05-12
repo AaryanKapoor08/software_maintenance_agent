@@ -5,8 +5,8 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
-from patchpilot.llm import provider_for
-from patchpilot.models import (
+from software_maintaince_agent.llm import provider_for
+from software_maintaince_agent.models import (
     AgentPlan,
     CommandResult,
     CommandStatus,
@@ -15,21 +15,21 @@ from patchpilot.models import (
     PatchAttempt,
     RunState,
 )
-from patchpilot.patching import FileChange, HeuristicPatcher, PatchSafetyError, unified_diff, write_changes
-from patchpilot.repo_inspect import inspect_repo, iter_repo_files
-from patchpilot.report import write_report
-from patchpilot.retrieval import hybrid_retrieve, lexical_retrieve
-from patchpilot.risk import score_risk
-from patchpilot.sandbox import E2BSandbox, LocalSandbox, SandboxError
-from patchpilot.settings import Settings
-from patchpilot.storage import TraceStore
+from software_maintaince_agent.patching import FileChange, HeuristicPatcher, PatchSafetyError, unified_diff, write_changes
+from software_maintaince_agent.repo_inspect import inspect_repo, iter_repo_files
+from software_maintaince_agent.report import write_report
+from software_maintaince_agent.retrieval import hybrid_retrieve, lexical_retrieve
+from software_maintaince_agent.risk import score_risk
+from software_maintaince_agent.sandbox import E2BSandbox, LocalSandbox, SandboxError
+from software_maintaince_agent.settings import Settings
+from software_maintaince_agent.storage import TraceStore
 
 
 def load_task(path: Path) -> MaintenanceTask:
     return MaintenanceTask.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-class PatchPilotAgent:
+class SoftwareMaintainceAgent:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or Settings.from_env()
 

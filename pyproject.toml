@@ -3,7 +3,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "patchpilot"
+name = "software_maintaince_agent"
 version = "0.1.0"
 description = "CI failure to tested draft-PR-ready maintenance patches."
 readme = "README.md"
@@ -21,8 +21,8 @@ dev = [
 ]
 
 [project.scripts]
-ama = "patchpilot.cli:app"
-patchpilot = "patchpilot.cli:app"
+ama = "software_maintaince_agent.cli:app"
+software_maintaince_agent = "software_maintaince_agent.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from patchpilot.models import CommandResult, CommandStatus, RiskReport
+from software_maintaince_agent.models import CommandResult, CommandStatus, RiskReport
 
 
 def score_risk(

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.agent import load_task
-from patchpilot.repo_inspect import inspect_repo
-from patchpilot.retrieval import hashed_vector, hybrid_retrieve, lexical_retrieve, recall_at_k
+from software_maintaince_agent.agent import load_task
+from software_maintaince_agent.repo_inspect import inspect_repo
+from software_maintaince_agent.retrieval import hashed_vector, hybrid_retrieve, lexical_retrieve, recall_at_k
 
 FIXTURE = Path("examples/fixtures/python_email_validator")
 TASK_FILE = Path("examples/tasks/python_email_empty.json")

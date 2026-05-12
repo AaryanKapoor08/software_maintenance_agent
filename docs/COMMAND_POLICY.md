@@ -1,6 +1,6 @@
 # Command Policy
 
-PatchPilot runs project commands through a command policy before execution.
+software_maintaince agent runs project commands through a command policy before execution.
 
 Allowed command families:
 

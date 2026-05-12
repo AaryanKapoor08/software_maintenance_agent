@@ -4,11 +4,11 @@ import json
 import time
 from pathlib import Path
 
-from patchpilot.agent import load_task
-from patchpilot.jepa.dataset import examples_from_task_files
-from patchpilot.jepa.predictor import CodeJepaPredictor
-from patchpilot.models import BenchmarkReport, BenchmarkSuite, RetrievalMetrics
-from patchpilot.retrieval import embedding_retrieve, hybrid_retrieve, lexical_retrieve, recall_at_k
+from software_maintaince_agent.agent import load_task
+from software_maintaince_agent.jepa.dataset import examples_from_task_files
+from software_maintaince_agent.jepa.predictor import CodeJepaPredictor
+from software_maintaince_agent.models import BenchmarkReport, BenchmarkSuite, RetrievalMetrics
+from software_maintaince_agent.retrieval import embedding_retrieve, hybrid_retrieve, lexical_retrieve, recall_at_k
 
 
 def load_suite(path: Path) -> BenchmarkSuite:
@@ -124,7 +124,7 @@ def build_metrics(method: str, pairs: list[tuple[list, list[str]]], latency_ms: 
 
 def render_benchmark_report(report: BenchmarkReport) -> str:
     lines = [
-        "# PatchPilot Retrieval Benchmark",
+        "# software_maintaince agent Retrieval Benchmark",
         "",
         f"Suite: `{report.suite}`",
         f"Tasks: `{report.task_count}`",

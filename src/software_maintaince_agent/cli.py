@@ -8,14 +8,14 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from patchpilot.agent import PatchPilotAgent, load_task
-from patchpilot.dashboard import serve_dashboard
-from patchpilot.evals.benchmark import run_retrieval_benchmark
-from patchpilot.github_integration import fetch_issue_task
-from patchpilot.settings import Settings
-from patchpilot.storage import TraceStore
+from software_maintaince_agent.agent import SoftwareMaintainceAgent, load_task
+from software_maintaince_agent.dashboard import serve_dashboard
+from software_maintaince_agent.evals.benchmark import run_retrieval_benchmark
+from software_maintaince_agent.github_integration import fetch_issue_task
+from software_maintaince_agent.settings import Settings
+from software_maintaince_agent.storage import TraceStore
 
-app = typer.Typer(help="PatchPilot: CI failure to tested draft-PR-ready patch.")
+app = typer.Typer(help="software_maintaince agent: CI failure to tested draft-PR-ready patch.")
 console = Console()
 
 
@@ -39,7 +39,7 @@ def run(
         assert task is not None
         maintenance_task = load_task(task)
 
-    report = PatchPilotAgent(settings).run_task(
+    report = SoftwareMaintainceAgent(settings).run_task(
         maintenance_task,
         sandbox_kind=sandbox,
         dry_run=dry_run,

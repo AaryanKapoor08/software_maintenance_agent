@@ -7,10 +7,10 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from patchpilot.command_policy import CommandPolicy
-from patchpilot.models import CommandResult, CommandStatus, MaintenanceTask, RunState
-from patchpilot.redaction import redact
-from patchpilot.storage import TraceStore
+from software_maintaince_agent.command_policy import CommandPolicy
+from software_maintaince_agent.models import CommandResult, CommandStatus, MaintenanceTask, RunState
+from software_maintaince_agent.redaction import redact
+from software_maintaince_agent.storage import TraceStore
 
 
 class SandboxError(RuntimeError):

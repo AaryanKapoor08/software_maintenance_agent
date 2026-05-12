@@ -5,8 +5,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from patchpilot.models import RunState, TraceEvent
-from patchpilot.redaction import redact, redact_mapping
+from software_maintaince_agent.models import RunState, TraceEvent
+from software_maintaince_agent.redaction import redact, redact_mapping
 
 
 class TraceStore:

@@ -1,13 +1,13 @@
-# PatchPilot
+# software_maintaince agent
 
-PatchPilot is a local maintenance agent for small, testable software fixes. It takes a task, runs the project in a sandbox copy, finds likely files, applies a focused patch, reruns tests, and writes a report.
+software_maintaince agent is a local maintenance agent for small, testable software fixes. It takes a task, runs the project in a sandbox copy, finds likely files, applies a focused patch, reruns tests, and writes a report.
 
 ## Quick Start
 
 ```bash
 python -m pip install -e ".[dev]"
-python -m patchpilot.cli run --task examples/tasks/python_email_empty.json --sandbox local
-python -m patchpilot.cli dashboard --port 8765
+python -m software_maintaince_agent.cli run --task examples/tasks/python_email_empty.json --sandbox local
+python -m software_maintaince_agent.cli dashboard --port 8765
 ```
 
 Open `http://127.0.0.1:8765` after starting the dashboard.
@@ -43,7 +43,7 @@ flowchart LR
 ## Example Run
 
 ```bash
-python -m patchpilot.cli run --task examples/tasks/python_email_empty.json --sandbox local
+python -m software_maintaince_agent.cli run --task examples/tasks/python_email_empty.json --sandbox local
 ```
 
 The example task copies the fixture project into `runs/`, reproduces the failing test, patches the validator, reruns tests, and writes:
@@ -56,7 +56,7 @@ The example task copies the fixture project into `runs/`, reproduces the failing
 ## Benchmark
 
 ```bash
-python -m patchpilot.cli benchmark --suite benchmark/suites/mvp.json
+python -m software_maintaince_agent.cli benchmark --suite benchmark/suites/mvp.json
 ```
 
 The benchmark checks whether the file finder selects the expected files for the included tasks.

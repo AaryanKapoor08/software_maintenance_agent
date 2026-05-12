@@ -7,9 +7,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from patchpilot.agent import PatchPilotAgent, load_task
-from patchpilot.settings import Settings
-from patchpilot.storage import TraceStore
+from software_maintaince_agent.agent import SoftwareMaintainceAgent, load_task
+from software_maintaince_agent.settings import Settings
+from software_maintaince_agent.storage import TraceStore
 
 
 def list_runs(runs_dir: Path) -> list[dict[str, str]]:
@@ -70,7 +70,7 @@ def render_dashboard_html() -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PatchPilot Dashboard</title>
+  <title>software_maintaince agent Dashboard</title>
   <style>
     :root {
       color-scheme: light;
@@ -181,7 +181,7 @@ def render_dashboard_html() -> str:
 <body>
   <header>
     <div>
-      <h1>PatchPilot</h1>
+      <h1>software_maintaince agent</h1>
       <div class="empty">CI failure to tested maintenance patch</div>
     </div>
     <button class="secondary" style="max-width: 140px" onclick="refreshRuns()">Refresh</button>
@@ -333,7 +333,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         sandbox = str(payload.get("sandbox", "local"))
         try:
             task = load_task(task_path)
-            report = PatchPilotAgent(self.settings).run_task(task, sandbox_kind=sandbox)
+            report = SoftwareMaintainceAgent(self.settings).run_task(task, sandbox_kind=sandbox)
             run_id = Path(report.report_path or "").parent.name if report.report_path else ""
             self.respond_json(
                 {
@@ -392,5 +392,5 @@ def serve_dashboard(host: str = "127.0.0.1", port: int = 8765, runs_dir: Path = 
         runs_dir=runs_dir,
     )
     server = ThreadingHTTPServer((host, port), DashboardHandler)
-    print(f"PatchPilot dashboard running at http://{host}:{port}")
+    print(f"software_maintaince agent dashboard running at http://{host}:{port}")
     server.serve_forever()

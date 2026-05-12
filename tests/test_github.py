@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from patchpilot.github_integration import parse_issue_url
+from software_maintaince_agent.github_integration import parse_issue_url
 
 
 def test_parse_issue_url() -> None:

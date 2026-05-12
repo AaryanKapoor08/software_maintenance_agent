@@ -4,7 +4,7 @@ import difflib
 import fnmatch
 from pathlib import Path
 
-from patchpilot.models import FileChange, MaintenanceTask
+from software_maintaince_agent.models import FileChange, MaintenanceTask
 
 
 class PatchSafetyError(RuntimeError):

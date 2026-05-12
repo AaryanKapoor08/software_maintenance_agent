@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from patchpilot.retrieval import cosine, hashed_vector
+from software_maintaince_agent.retrieval import cosine, hashed_vector
 
 
 @dataclass

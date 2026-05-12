@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from patchpilot.models import MaintenanceTask, RepoSummary
+from software_maintaince_agent.models import MaintenanceTask, RepoSummary
 
 IGNORED_DIRS = {".git", "__pycache__", ".pytest_cache", "node_modules", ".venv", "dist", "build"}
 

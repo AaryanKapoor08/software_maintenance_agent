@@ -7,8 +7,8 @@ from collections import Counter, defaultdict
 from hashlib import blake2b
 from pathlib import Path
 
-from patchpilot.models import MaintenanceTask, RetrievalCandidate
-from patchpilot.repo_inspect import iter_repo_files
+from software_maintaince_agent.models import MaintenanceTask, RetrievalCandidate
+from software_maintaince_agent.repo_inspect import iter_repo_files
 
 TOKEN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]+|[A-Za-z0-9_.-]+")
 STACK_FILE_RE = re.compile(r'File "([^"]+\.(?:py|js|ts|tsx|jsx))"')

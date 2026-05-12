@@ -7,7 +7,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Settings:
-    database_url: str = "sqlite:///runs/patchpilot.sqlite"
+    database_url: str = "sqlite:///runs/software_maintaince_agent.sqlite"
     llm_provider: str = "gemini"
     max_attempts: int = 3
     max_changed_files: int = 6

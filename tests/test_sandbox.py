@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from patchpilot.agent import load_task
-from patchpilot.models import CommandStatus
-from patchpilot.sandbox import LocalSandbox
-from patchpilot.storage import TraceStore
+from software_maintaince_agent.agent import load_task
+from software_maintaince_agent.models import CommandStatus
+from software_maintaince_agent.sandbox import LocalSandbox
+from software_maintaince_agent.storage import TraceStore
 
 
 def test_local_sandbox_copies_fixture_and_blocks_unsafe_command(tmp_path: Path) -> None:

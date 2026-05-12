@@ -4,9 +4,9 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from patchpilot.jepa.encoders import HashingTextEncoder
-from patchpilot.models import MaintenanceTask, RetrievalCandidate
-from patchpilot.retrieval import build_file_documents, cosine
+from software_maintaince_agent.jepa.encoders import HashingTextEncoder
+from software_maintaince_agent.models import MaintenanceTask, RetrievalCandidate
+from software_maintaince_agent.retrieval import build_file_documents, cosine
 
 
 @dataclass
