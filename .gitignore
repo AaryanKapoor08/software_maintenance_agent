@@ -2,17 +2,6 @@
 .env.*
 !.env.example
 
-# Local assistant/planning artifacts
-BUILD_PLAN.md
-PROGRESS.md
-prompts/
-runs/
-.codex/
-.claude/
-.cursor/
-.continue/
-.aider*
-
 .venv/
 venv/
 __pycache__/
