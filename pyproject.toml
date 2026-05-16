@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "software_maintaince_agent"
 version = "0.1.0"
-description = "CI failure to tested draft-PR-ready maintenance patches."
+description = "Local maintenance runner for small, tested patch candidates."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
