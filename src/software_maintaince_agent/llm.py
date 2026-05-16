@@ -27,7 +27,7 @@ class GeminiProvider(LLMProvider):
         return ProviderStatus(
             self.name,
             True,
-            "Gemini API key is configured. Fixture demo uses deterministic local patching unless LLM calls are enabled.",
+            "GEMINI_API_KEY is configured. This build still uses deterministic local patching.",
         )
 
 
@@ -35,7 +35,7 @@ class LocalHeuristicProvider(LLMProvider):
     name = "local-heuristic"
 
     def status(self) -> ProviderStatus:
-        return ProviderStatus(self.name, True, "Deterministic fixture patching is available.")
+        return ProviderStatus(self.name, True, "Deterministic local patching is available.")
 
 
 def provider_for(name: str) -> LLMProvider:
