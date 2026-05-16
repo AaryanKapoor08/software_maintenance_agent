@@ -13,7 +13,7 @@ def render_final_report(report: FinalReport, risk: RiskReport) -> str:
     ] or ["1. No test command available."]
     known_limitations = [f"- {item}" for item in report.known_limitations] or ["- None"]
     lines = [
-        "# software_maintaince agent Final Report",
+        "# Software Maintenance Agent Final Report",
         "",
         f"Status: **{report.status}**",
         f"Risk: **{report.risk_level}** ({risk.score}/100)",
