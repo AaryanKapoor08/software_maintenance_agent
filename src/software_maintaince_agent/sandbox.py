@@ -133,7 +133,7 @@ class LocalSandbox:
 
 
 class E2BSandbox:
-    """Placeholder adapter that records a blocker when E2B is unavailable."""
+    """E2B adapter that records a blocker until remote sandbox execution is configured."""
 
     def __init__(self, run_id: str, run_dir: Path, trace: TraceStore) -> None:
         self.run_id = run_id
@@ -142,7 +142,7 @@ class E2BSandbox:
 
     def prepare(self, task: MaintenanceTask) -> PreparedSandbox:
         if not os.getenv("E2B_API_KEY"):
-            blocker = "E2B_API_KEY is not configured; use local trusted fixture sandbox for MVP proof."
+            blocker = "E2B_API_KEY is not configured; use the local trusted fixture sandbox for local proof."
             self.trace.event(
                 self.run_id,
                 "blocker",
@@ -151,7 +151,7 @@ class E2BSandbox:
                 RunState.ESCALATED,
             )
             return PreparedSandbox(repo_dir=self.run_dir / "repo", sandbox_kind="e2b", blocker=blocker)
-        blocker = "E2B adapter scaffold exists, but external sandbox execution is manual proof in this build."
+        blocker = "E2B credentials are present, but remote sandbox execution is not enabled in this build."
         self.trace.event(
             self.run_id,
             "blocker",
