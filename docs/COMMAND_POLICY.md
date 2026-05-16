@@ -1,6 +1,6 @@
 # Command Policy
 
-software_maintaince agent runs project commands through a command policy before execution.
+Software Maintenance Agent checks project commands against a command policy before execution.
 
 Allowed command families:
 
