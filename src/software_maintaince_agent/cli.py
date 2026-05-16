@@ -15,7 +15,7 @@ from software_maintaince_agent.github_integration import fetch_issue_task
 from software_maintaince_agent.settings import Settings
 from software_maintaince_agent.storage import TraceStore
 
-app = typer.Typer(help="software_maintaince agent: CI failure to tested draft-PR-ready patch.")
+app = typer.Typer(help="Software Maintenance Agent: run small, tested maintenance patches locally.")
 console = Console()
 
 
@@ -53,7 +53,7 @@ def run(
     if create_pr:
         console.print(
             "[yellow]Draft PR creation is gated behind GITHUB_TOKEN and controlled-repo proof. "
-            "A local PR-ready report was generated for this run.[/yellow]"
+            "A local patch report was generated for this run.[/yellow]"
         )
 
 
