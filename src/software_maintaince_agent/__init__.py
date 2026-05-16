@@ -1,4 +1,4 @@
-"""software_maintaince agent autonomous maintenance agent."""
+"""Local maintenance runner for small, tested patch candidates."""
 
 __all__ = ["__version__"]
 
