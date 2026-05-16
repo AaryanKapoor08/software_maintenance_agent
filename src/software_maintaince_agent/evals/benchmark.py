@@ -124,7 +124,7 @@ def build_metrics(method: str, pairs: list[tuple[list, list[str]]], latency_ms: 
 
 def render_benchmark_report(report: BenchmarkReport) -> str:
     lines = [
-        "# software_maintaince agent Retrieval Benchmark",
+        "# Software Maintenance Agent Retrieval Benchmark",
         "",
         f"Suite: `{report.suite}`",
         f"Tasks: `{report.task_count}`",
@@ -144,8 +144,8 @@ def render_benchmark_report(report: BenchmarkReport) -> str:
             "## Interpretation",
             "",
             (
-                "Code-JEPA is kept in the critical path only when it improves top-5 recall or "
-                "preserves recall with at least 25% fewer context files. Otherwise it remains experimental."
+                "Code-JEPA is used only when it improves top-5 recall or preserves recall with at least "
+                "25% fewer context files. Otherwise it remains experimental."
             ),
         ]
     )
