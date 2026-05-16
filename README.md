@@ -1,6 +1,6 @@
-# software_maintaince agent
+# Software Maintenance Agent
 
-software_maintaince agent is a local maintenance agent for small, testable software fixes. It takes a task, runs the project in a sandbox copy, finds likely files, applies a focused patch, reruns tests, and writes a report.
+Software Maintenance Agent is a local tool for small, testable software fixes. It takes a task, runs the project in a sandbox copy, selects likely files, applies a focused patch, reruns tests, and writes a report.
 
 ## Quick Start
 
@@ -29,7 +29,7 @@ flowchart LR
     Trace --> Dashboard
 ```
 
-## What It Includes
+## Included Pieces
 
 - Command line tools for running a task, viewing a trace, starting the dashboard, and running the benchmark.
 - A local sandbox for trusted fixture projects.
@@ -38,7 +38,7 @@ flowchart LR
 - A deterministic patch path for the included email validation fixture.
 - Test execution with command checks and path limits.
 - Markdown reports, patch diffs, JSON run files, and SQLite traces.
-- A small browser dashboard for starting fixture runs and reviewing results.
+- A browser dashboard for starting fixture runs and reviewing results.
 
 ## Example Run
 
@@ -73,4 +73,3 @@ The benchmark checks whether the file finder selects the expected files for the 
 
 - Python 3.11 or newer
 - `pytest` for local tests
-
