@@ -74,60 +74,149 @@ def render_dashboard_html() -> str:
   <style>
     :root {
       color-scheme: light;
-      --bg: #f7f8fa;
-      --panel: #ffffff;
-      --border: #d7dce2;
-      --text: #18212f;
-      --muted: #637083;
-      --accent: #0f766e;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-muted: #f8fafc;
+      --border: #d8dee7;
+      --border-strong: #b8c2cf;
+      --text: #151b23;
+      --muted: #667085;
+      --muted-strong: #475467;
+      --accent: #22577a;
+      --accent-strong: #16435f;
+      --accent-soft: #e6f1f6;
       --danger: #b42318;
+      --danger-soft: #fef3f2;
       --ok: #067647;
+      --ok-soft: #ecfdf3;
       --warn: #b54708;
+      --warn-soft: #fffaeb;
+      --code-bg: #0f172a;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
     header {
-      min-height: 72px;
-      padding: 18px 28px;
+      min-height: 76px;
+      padding: 16px 28px;
       border-bottom: 1px solid var(--border);
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.94);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      backdrop-filter: blur(10px);
     }
-    h1 { margin: 0; font-size: 24px; line-height: 1.15; letter-spacing: 0; }
-    h2 { margin: 0 0 12px; font-size: 16px; letter-spacing: 0; }
+    h1 { margin: 0; font-size: 19px; line-height: 1.2; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 13px; line-height: 1.2; letter-spacing: 0; }
+    p { margin: 0; }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+    li + li { margin-top: 4px; }
     main {
       display: grid;
-      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-      min-height: calc(100vh - 72px);
+      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+      min-height: calc(100vh - 76px);
     }
     aside {
       border-right: 1px solid var(--border);
-      background: #eef2f6;
-      padding: 18px;
+      background: var(--surface-muted);
+      padding: 20px;
       overflow: auto;
     }
-    section { padding: 20px 24px; overflow: auto; }
+    section {
+      padding: 22px 26px 28px;
+      overflow: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22577a, #38a3a5);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+      flex: 0 0 auto;
+      position: relative;
+    }
+    .mark::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.94);
+      border-left-color: transparent;
+      border-radius: 50%;
+      position: absolute;
+      left: 12px;
+      top: 12px;
+    }
+    .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      overflow-wrap: anywhere;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
     .panel {
-      background: var(--panel);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
       margin-bottom: 16px;
     }
-    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
+    .panel-header {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .panel-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted-strong);
+      margin: 12px 0 6px;
+      font-weight: 650;
+    }
     input, select, button {
       width: 100%;
-      min-height: 36px;
+      min-height: 38px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 7px 9px;
+      padding: 8px 10px;
       background: #fff;
       color: var(--text);
       font: inherit;
+    }
+    input:focus, select:focus, button:focus-visible {
+      outline: 3px solid rgba(34, 87, 122, 0.18);
+      outline-offset: 1px;
+      border-color: var(--accent);
     }
     button {
       cursor: pointer;
@@ -136,112 +225,282 @@ def render_dashboard_html() -> str:
       border-color: var(--accent);
       font-weight: 650;
       margin-top: 12px;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
     }
-    button.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+    button:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--border-strong);
+      margin-top: 0;
+      width: auto;
+      min-width: 108px;
+    }
+    button.secondary:hover { background: var(--surface-muted); border-color: var(--accent); }
+    .stack { display: grid; gap: 12px; }
     .run {
       border: 1px solid var(--border);
       background: #fff;
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px;
       margin-bottom: 8px;
       cursor: pointer;
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
     }
-    .run:hover { border-color: var(--accent); }
-    .run strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
-    .run span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .status { font-weight: 700; }
-    .ok { color: var(--ok); }
-    .failed { color: var(--danger); }
-    .blocked { color: var(--warn); }
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .run:hover, .run.active {
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(34, 87, 122, 0.09);
+      transform: translateY(-1px);
+    }
+    .run-top {
+      align-items: start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    .run strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .run span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+      overflow-wrap: anywhere;
+    }
+    .status {
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1;
+      min-height: 24px;
+      padding: 4px 8px;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .ok { background: var(--ok-soft); border-color: #abefc6; color: var(--ok); }
+    .failed { background: var(--danger-soft); border-color: #fecdca; color: var(--danger); }
+    .blocked { background: var(--warn-soft); border-color: #fedf89; color: var(--warn); }
+    .pending { background: var(--accent-soft); border-color: #b9dce8; color: var(--accent-strong); }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .metric {
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .metric-value {
+      font-size: 13px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+    .metric-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+      overflow-wrap: anywhere;
+    }
     pre {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
       margin: 0;
-      background: #101828;
-      color: #eef2f6;
+      background: var(--code-bg);
+      color: #e2e8f0;
       border-radius: 8px;
-      padding: 14px;
+      padding: 16px;
       font-size: 12px;
       line-height: 1.45;
-      max-height: 48vh;
+      max-height: 46vh;
       overflow: auto;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 8px; vertical-align: top; }
-    th { color: var(--muted); font-weight: 650; }
-    .empty { color: var(--muted); padding: 16px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--surface-muted);
+    }
+    tbody tr:hover { background: #fbfcfe; }
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px 0;
+    }
+    .fine-print {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 48vh;
+    }
+    .table-wrap table th { position: sticky; top: 0; z-index: 1; }
+    .hidden { display: none; }
     @media (max-width: 860px) {
       main { grid-template-columns: 1fr; }
       aside { border-right: 0; border-bottom: 1px solid var(--border); }
       .grid { grid-template-columns: 1fr; }
+      header { align-items: flex-start; padding: 14px 18px; }
+      section, aside { padding: 16px; }
+    }
+    @media (max-width: 520px) {
+      header { flex-wrap: wrap; }
+      .toolbar { width: 100%; }
+      button.secondary { width: 100%; }
+      .run { overflow: hidden; }
+      .run-top {
+        display: grid;
+        justify-content: start;
+        justify-items: start;
+      }
+      .run .status {
+        white-space: normal;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <h1>software_maintaince agent</h1>
-      <div class="empty">CI failure to tested maintenance patch</div>
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <div>
+        <h1>software_maintaince agent</h1>
+        <p class="eyebrow">Maintenance runs, traces, reports, and patch review.</p>
+      </div>
     </div>
-    <button class="secondary" style="max-width: 140px" onclick="refreshRuns()">Refresh</button>
+    <div class="toolbar">
+      <button class="secondary" onclick="refreshRuns()">Refresh</button>
+    </div>
   </header>
   <main>
     <aside>
       <div class="panel">
-        <h2>Run Fixture</h2>
-        <label for="task">Task</label>
-        <select id="task">
-          <option value="examples/tasks/python_email_empty.json">Email empty fixture</option>
-          <option value="examples/tasks/python_email_repair.json">Repair-loop fixture</option>
-        </select>
-        <label for="sandbox">Sandbox</label>
-        <select id="sandbox">
-          <option value="local">local trusted fixture</option>
-          <option value="e2b">e2b blocker proof</option>
-        </select>
-        <button onclick="runTask()">Run</button>
+        <div class="panel-header">
+          <div>
+            <h2>Run Fixture</h2>
+            <p class="panel-kicker">Start a controlled maintenance run.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <label for="task">Task</label>
+            <select id="task">
+              <option value="examples/tasks/python_email_empty.json">Email empty fixture</option>
+              <option value="examples/tasks/python_email_repair.json">Repair-loop fixture</option>
+            </select>
+          </div>
+          <div>
+            <label for="sandbox">Sandbox</label>
+            <select id="sandbox">
+              <option value="local">Local trusted fixture</option>
+              <option value="e2b">E2B blocker proof</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="runTask()">Run fixture</button>
         <div id="run-status" class="empty"></div>
       </div>
-      <h2>Runs</h2>
+      <div class="panel-header">
+        <div>
+          <h2>Runs</h2>
+          <p class="panel-kicker" id="run-count">Loading...</p>
+        </div>
+      </div>
       <div id="runs"></div>
     </aside>
     <section>
       <div class="grid">
-        <div class="panel"><h2>Status</h2><div id="status" class="empty">Select a run.</div></div>
-        <div class="panel"><h2>Selected Files</h2><div id="selected" class="empty">No run selected.</div></div>
-        <div class="panel"><h2>Attempts</h2><div id="attempts" class="empty">No run selected.</div></div>
+        <div class="panel metric">
+          <div class="panel-header"><h2>Status</h2></div>
+          <div id="status" class="empty">Select a run.</div>
+        </div>
+        <div class="panel metric">
+          <div class="panel-header"><h2>Selected Files</h2></div>
+          <div id="selected" class="empty">No run selected.</div>
+        </div>
+        <div class="panel metric">
+          <div class="panel-header"><h2>Attempts</h2></div>
+          <div id="attempts" class="empty">No run selected.</div>
+        </div>
       </div>
       <div class="panel">
-        <h2>Trace Events</h2>
+        <div class="panel-header">
+          <div>
+            <h2>Trace Events</h2>
+            <p class="panel-kicker" id="event-count"></p>
+          </div>
+        </div>
         <div id="events" class="empty">No run selected.</div>
       </div>
       <div class="panel">
-        <h2>Final Report</h2>
+        <div class="panel-header"><h2>Final Report</h2></div>
         <pre id="report">No run selected.</pre>
       </div>
       <div class="panel">
-        <h2>Patch Diff</h2>
+        <div class="panel-header"><h2>Patch Diff</h2></div>
         <pre id="patch">No run selected.</pre>
       </div>
     </section>
   </main>
   <script>
+    let activeRunId = '';
+
     async function refreshRuns() {
-      const res = await fetch('/api/runs');
-      const runs = await res.json();
       const box = document.getElementById('runs');
-      if (!runs.length) {
-        box.innerHTML = '<div class="empty">No runs yet.</div>';
-        return;
+      try {
+        const res = await fetch('/api/runs');
+        if (!res.ok) throw new Error('Unable to load runs.');
+        const runs = await res.json();
+        document.getElementById('run-count').textContent = `${runs.length} ${runs.length === 1 ? 'run' : 'runs'}`;
+        if (!runs.length) {
+          box.innerHTML = '<div class="empty">No runs yet.</div>';
+          return;
+        }
+        box.innerHTML = runs.map(run => {
+          const runId = escapeHtml(String(run.run_id || ''));
+          const taskId = escapeHtml(String(run.task_id || 'Unknown task'));
+          const status = escapeHtml(String(run.status || 'PENDING'));
+          const activeClass = run.run_id === activeRunId ? ' active' : '';
+          const runValue = escapeHtml(String(run.run_id || ''));
+          return `
+          <div class="run${activeClass}" data-run-id="${runValue}">
+            <div class="run-top">
+              <strong>${taskId}</strong>
+              <span class="status ${statusClass(run.status)}">${status}</span>
+            </div>
+            <span>${runId}</span>
+          </div>`;
+        }).join('');
+        box.querySelectorAll('.run').forEach(card => {
+          card.addEventListener('click', () => loadRun(card.dataset.runId || ''));
+        });
+      } catch (error) {
+        document.getElementById('run-count').textContent = 'Unavailable';
+        box.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Unable to load runs.')}</div>`;
       }
-      box.innerHTML = runs.map(run => `
-        <div class="run" onclick="loadRun('${run.run_id}')">
-          <strong>${run.run_id}</strong>
-          <span>${run.task_id}</span>
-          <span class="status ${statusClass(run.status)}">${run.status}</span>
-        </div>`).join('');
     }
+
     async function runTask() {
       const status = document.getElementById('run-status');
       status.textContent = 'Running...';
@@ -258,44 +517,66 @@ def render_dashboard_html() -> str:
       await refreshRuns();
       if (data.run_id) await loadRun(data.run_id);
     }
+
     async function loadRun(id) {
+      activeRunId = id;
       const res = await fetch('/api/runs/' + encodeURIComponent(id));
       const data = await res.json();
+      if (data.error) {
+        document.getElementById('status').innerHTML = `<div class="empty">${escapeHtml(data.error)}</div>`;
+        return;
+      }
+      const run = data.run || {};
+      const selected = (data.selected_files || []).map(item => item.path || item);
+      const attempts = (data.attempts || []).map(item => `attempt ${item.attempt}: ${item.result}`);
+      const events = data.events || [];
       document.getElementById('status').innerHTML = `
-        <div><strong>${data.run.run_id}</strong></div>
-        <div>${data.run.task_id}</div>
-        <div class="status ${statusClass(data.run.status)}">${data.run.status}</div>`;
-      document.getElementById('selected').innerHTML = renderList((data.selected_files || []).map(item => item.path || item));
-      const attempts = (data.attempts || []).map(item => {
-        return `attempt ${item.attempt}: ${item.result}`;
-      });
+        <div class="metric-value">${escapeHtml(String(run.run_id || 'Unknown run'))}</div>
+        <div class="metric-meta">${escapeHtml(String(run.task_id || 'Unknown task'))}</div>
+        <div class="fine-print">
+          <span class="status ${statusClass(run.status)}">${escapeHtml(String(run.status || 'PENDING'))}</span>
+        </div>`;
+      document.getElementById('selected').innerHTML = renderList(selected);
       document.getElementById('attempts').innerHTML = renderList(attempts);
-      document.getElementById('events').innerHTML = renderEvents(data.events || []);
+      document.getElementById('event-count').textContent = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
+      document.getElementById('events').innerHTML = renderEvents(events);
       document.getElementById('report').textContent = data.report || 'No report.';
       document.getElementById('patch').textContent = data.patch || 'No patch.';
+      await refreshRuns();
     }
+
     function renderList(items) {
       if (!items.length) return '<div class="empty">None</div>';
       return '<ul>' + items.map(item => `<li>${escapeHtml(String(item))}</li>`).join('') + '</ul>';
     }
+
     function renderEvents(events) {
       if (!events.length) return '<div class="empty">None</div>';
-      return `<table><thead><tr><th>Time</th><th>State</th><th>Kind</th><th>Message</th></tr></thead><tbody>
+      return `<div class="table-wrap">
+        <table><thead><tr><th>Time</th><th>State</th><th>Kind</th><th>Message</th></tr></thead><tbody>
         ${events.map(e => {
-          const time = e.timestamp.split('T').pop().slice(0,8);
-          return `<tr><td>${time}</td><td>${e.state || ''}</td><td>${e.kind}</td><td>${escapeHtml(e.message)}</td></tr>`;
+          const time = String(e.timestamp || '').split('T').pop().slice(0,8);
+          return `<tr>
+            <td>${escapeHtml(time)}</td>
+            <td>${escapeHtml(e.state || '')}</td>
+            <td>${escapeHtml(e.kind || '')}</td>
+            <td>${escapeHtml(e.message || '')}</td>
+          </tr>`;
         }).join('')}
-      </tbody></table>`;
+      </tbody></table></div>`;
     }
+
     function statusClass(status) {
       if ((status || '').includes('SUCCESS')) return 'ok';
       if ((status || '').includes('FAILED')) return 'failed';
       if ((status || '').includes('ESCALATED') || (status || '').includes('blocked')) return 'blocked';
-      return '';
+      return 'pending';
     }
+
     function escapeHtml(value) {
       return value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     }
+
     refreshRuns();
   </script>
 </body>
