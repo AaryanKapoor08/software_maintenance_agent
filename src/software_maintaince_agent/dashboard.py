@@ -70,396 +70,347 @@ def render_dashboard_html() -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>software_maintaince agent Dashboard</title>
+  <title>Maintenance Agent</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f4f6f8;
-      --surface: #ffffff;
-      --surface-muted: #f8fafc;
-      --border: #d8dee7;
-      --border-strong: #b8c2cf;
-      --text: #151b23;
-      --muted: #667085;
-      --muted-strong: #475467;
-      --accent: #22577a;
-      --accent-strong: #16435f;
-      --accent-soft: #e6f1f6;
-      --danger: #b42318;
-      --danger-soft: #fef3f2;
-      --ok: #067647;
-      --ok-soft: #ecfdf3;
-      --warn: #b54708;
-      --warn-soft: #fffaeb;
-      --code-bg: #0f172a;
-      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #ffffff;
+      --subtle: #fafafa;
+      --panel: #ffffff;
+      --border: #ececec;
+      --border-strong: #e0e0e0;
+      --text: #0a0a0a;
+      --muted: #707070;
+      --muted-soft: #999999;
+      --accent: #0a0a0a;
+      --accent-hover: #2a2a2a;
+      --focus: rgba(10, 10, 10, 0.12);
+      --ok: #137333;
+      --failed: #c5221f;
+      --blocked: #b06000;
+      --pending: #5f6368;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--sans);
     }
     * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-size: 14px;
-      line-height: 1.45;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
+    a { color: inherit; }
+    p { margin: 0; }
+    ::selection { background: rgba(10, 10, 10, 0.1); }
+
+    /* ---- top bar ---- */
     header {
-      min-height: 76px;
-      padding: 16px 28px;
+      height: 56px;
+      padding: 0 24px;
       border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: saturate(180%) blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       position: sticky;
       top: 0;
-      z-index: 2;
-      backdrop-filter: blur(10px);
+      z-index: 10;
     }
-    h1 { margin: 0; font-size: 19px; line-height: 1.2; letter-spacing: 0; }
-    h2 { margin: 0; font-size: 13px; line-height: 1.2; letter-spacing: 0; }
-    p { margin: 0; }
-    ul { margin: 8px 0 0; padding-left: 18px; }
-    li + li { margin-top: 4px; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .mark {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: var(--text);
+      color: #fff;
+      display: grid; place-items: center;
+      flex: 0 0 auto;
+    }
+    .mark svg { width: 15px; height: 15px; display: block; }
+    .brand h1 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .brand .tag {
+      font-size: 11px;
+      color: var(--muted);
+      border-left: 1px solid var(--border-strong);
+      padding-left: 11px;
+      white-space: nowrap;
+    }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+
+    /* ---- buttons ---- */
+    button {
+      font: inherit;
+      cursor: pointer;
+      border-radius: 7px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 500;
+      font-size: 12.5px;
+      padding: 0 14px;
+      height: 34px;
+      transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+    }
+    button:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button:disabled { opacity: 0.55; cursor: default; }
+    button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+    button.ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+    button.ghost:hover { background: var(--subtle); border-color: var(--muted-soft); }
+    button.block { width: 100%; }
+
+    /* ---- layout ---- */
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-      min-height: calc(100vh - 76px);
+      grid-template-columns: 320px minmax(0, 1fr);
+      min-height: calc(100vh - 56px);
     }
     aside {
       border-right: 1px solid var(--border);
-      background: var(--surface-muted);
-      padding: 20px;
+      background: var(--subtle);
+      padding: 18px 16px;
       overflow: auto;
-    }
-    section {
-      padding: 22px 26px 28px;
-      overflow: auto;
-    }
-    .brand {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
+      flex-direction: column;
+      gap: 22px;
     }
-    .mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #22577a, #38a3a5);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-      flex: 0 0 auto;
-      position: relative;
-    }
-    .mark::after {
-      content: "";
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.94);
-      border-left-color: transparent;
-      border-radius: 50%;
-      position: absolute;
-      left: 12px;
-      top: 12px;
-    }
+    section { padding: 24px 28px 40px; overflow: auto; min-width: 0; }
+    .content { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
+
     .eyebrow {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 2px;
-      overflow-wrap: anywhere;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
     }
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .panel-header {
-      align-items: center;
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .panel-kicker {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 3px;
-    }
-    label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted-strong);
-      margin: 12px 0 6px;
-      font-weight: 650;
-    }
-    input, select, button {
+
+    /* ---- form ---- */
+    .field { display: grid; gap: 6px; }
+    label { font-size: 12px; font-weight: 500; color: var(--text); }
+    select, input {
       width: 100%;
-      min-height: 38px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
+      height: 34px;
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      padding: 0 10px;
       background: #fff;
       color: var(--text);
       font: inherit;
+      font-size: 12.5px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
     }
-    input:focus, select:focus, button:focus-visible {
-      outline: 3px solid rgba(34, 87, 122, 0.18);
-      outline-offset: 1px;
-      border-color: var(--accent);
-    }
-    button {
-      cursor: pointer;
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-      font-weight: 650;
-      margin-top: 12px;
-      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
-    }
-    button:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
-    button:active { transform: translateY(1px); }
-    button.secondary {
-      background: #fff;
-      color: var(--text);
-      border-color: var(--border-strong);
-      margin-top: 0;
-      width: auto;
-      min-width: 108px;
-    }
-    button.secondary:hover { background: var(--surface-muted); border-color: var(--accent); }
+    select:focus, input:focus { outline: 3px solid var(--focus); outline-offset: 0; border-color: var(--muted-soft); }
     .stack { display: grid; gap: 12px; }
+
+    .side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .count { font-size: 11px; color: var(--muted-soft); font-variant-numeric: tabular-nums; }
+    .run-hint { font-size: 11.5px; color: var(--muted); min-height: 16px; }
+
+    /* ---- run list ---- */
+    .runs { display: grid; gap: 6px; }
     .run {
-      border: 1px solid var(--border);
-      background: #fff;
+      border: 1px solid transparent;
+      background: transparent;
       border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 8px;
+      padding: 9px 10px;
       cursor: pointer;
-      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+      transition: background 110ms ease, border-color 110ms ease;
     }
-    .run:hover, .run.active {
-      border-color: var(--accent);
-      box-shadow: 0 8px 20px rgba(34, 87, 122, 0.09);
-      transform: translateY(-1px);
-    }
-    .run-top {
-      align-items: start;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: space-between;
-    }
-    .run strong {
-      display: block;
-      font-size: 13px;
-      line-height: 1.25;
-      overflow-wrap: anywhere;
-    }
-    .run span {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 5px;
-      overflow-wrap: anywhere;
-    }
-    .status {
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      display: inline-flex;
-      font-size: 11px;
-      font-weight: 750;
-      line-height: 1;
-      min-height: 24px;
-      padding: 4px 8px;
-      white-space: nowrap;
-      max-width: 100%;
-    }
-    .ok { background: var(--ok-soft); border-color: #abefc6; color: var(--ok); }
-    .failed { background: var(--danger-soft); border-color: #fecdca; color: var(--danger); }
-    .blocked { background: var(--warn-soft); border-color: #fedf89; color: var(--warn); }
-    .pending { background: var(--accent-soft); border-color: #b9dce8; color: var(--accent-strong); }
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .metric {
-      min-height: 112px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .metric-value {
-      font-size: 13px;
-      font-weight: 700;
-      overflow-wrap: anywhere;
-    }
-    .metric-meta {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
-      overflow-wrap: anywhere;
-    }
+    .run:hover { background: #fff; border-color: var(--border); }
+    .run.active { background: #fff; border-color: var(--border-strong); }
+    .run-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+    .run-task { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .run-id { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--muted-soft); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ---- status dot ---- */
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; color: var(--muted); }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--pending); flex: 0 0 auto; }
+    .status.ok { color: var(--ok); } .status.ok::before { background: var(--ok); }
+    .status.failed { color: var(--failed); } .status.failed::before { background: var(--failed); }
+    .status.blocked { color: var(--blocked); } .status.blocked::before { background: var(--blocked); }
+    .status.pending { color: var(--pending); } .status.pending::before { background: var(--pending); }
+    .dot-only { gap: 0; } .dot-only::before { margin: 0; }
+
+    /* ---- panels / cards ---- */
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .panel > .ph { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+    .panel > .ph h2 { margin: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; }
+    .panel > .ph .count { font-size: 11px; }
+    .panel > .pb { padding: 16px; }
+
+    /* ---- run header strip ---- */
+    .run-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .run-head .title { display: grid; gap: 4px; min-width: 0; }
+    .run-head .title .id { font-family: var(--mono); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+    .run-head .title .task { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+
+    /* ---- metric cards ---- */
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 15px; display: grid; gap: 9px; align-content: start; min-height: 120px; }
+    .card .eyebrow { margin: 0; }
+    .card .big { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+    .card li { font-family: var(--mono); font-size: 11.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card li.muted { color: var(--muted); }
+
+    /* ---- code blocks ---- */
     pre {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
-      margin: 0;
-      background: var(--code-bg);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 16px;
-      font-size: 12px;
-      line-height: 1.45;
-      max-height: 46vh;
+      max-height: 440px;
       overflow: auto;
+      color: var(--text);
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th, td {
+    .diff-line { display: block; }
+    .diff-add { color: #137333; background: rgba(19, 115, 51, 0.07); }
+    .diff-del { color: #c5221f; background: rgba(197, 34, 31, 0.07); }
+    .diff-hunk { color: #6639ba; }
+    .diff-meta { color: var(--muted); }
+
+    /* ---- table ---- */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th {
       text-align: left;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+      padding: 9px 14px;
+      background: var(--subtle);
       border-bottom: 1px solid var(--border);
-      padding: 10px 8px;
-      vertical-align: top;
+      position: sticky; top: 0; z-index: 1;
     }
-    th {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--surface-muted);
-    }
-    tbody tr:hover { background: #fbfcfe; }
-    .empty {
-      color: var(--muted);
-      font-size: 13px;
-      padding: 10px 0;
-    }
-    .fine-print {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 10px;
-    }
-    .table-wrap {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: auto;
-      max-height: 48vh;
-    }
-    .table-wrap table th { position: sticky; top: 0; z-index: 1; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: var(--subtle); }
+    td.t-time { font-family: var(--mono); color: var(--muted); white-space: nowrap; font-size: 11px; }
+    td.t-state, td.t-kind { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+    td.t-msg { color: var(--text); overflow-wrap: anywhere; }
+    .table-scroll { max-height: 440px; overflow: auto; }
+
+    .empty { color: var(--muted-soft); font-size: 12px; padding: 4px 0; }
+    .panel .empty, .card .empty { padding: 0; }
     .hidden { display: none; }
-    @media (max-width: 860px) {
+
+    @media (max-width: 880px) {
       main { grid-template-columns: 1fr; }
       aside { border-right: 0; border-bottom: 1px solid var(--border); }
-      .grid { grid-template-columns: 1fr; }
-      header { align-items: flex-start; padding: 14px 18px; }
-      section, aside { padding: 16px; }
-    }
-    @media (max-width: 520px) {
-      header { flex-wrap: wrap; }
-      .toolbar { width: 100%; }
-      button.secondary { width: 100%; }
-      .run { overflow: hidden; }
-      .run-top {
-        display: grid;
-        justify-content: start;
-        justify-items: start;
-      }
-      .run .status {
-        white-space: normal;
-      }
+      .cards { grid-template-columns: 1fr; }
+      section { padding: 18px 16px 32px; }
+      .brand .tag { display: none; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">
-      <div class="mark" aria-hidden="true"></div>
-      <div>
-        <h1>software_maintaince agent</h1>
-        <p class="eyebrow">Maintenance runs, traces, reports, and patch review.</p>
-      </div>
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+      </span>
+      <h1>Maintenance Agent</h1>
+      <span class="tag">Runs &amp; patch review</span>
     </div>
     <div class="toolbar">
-      <button class="secondary" onclick="refreshRuns()">Refresh</button>
+      <button class="ghost" onclick="refreshRuns()">Refresh</button>
     </div>
   </header>
   <main>
     <aside>
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Run Fixture</h2>
-            <p class="panel-kicker">Start a controlled maintenance run.</p>
-          </div>
+      <div>
+        <div class="side-head">
+          <span class="eyebrow">New run</span>
         </div>
         <div class="stack">
-          <div>
+          <div class="field">
             <label for="task">Task</label>
             <select id="task">
               <option value="examples/tasks/python_email_empty.json">Email empty fixture</option>
               <option value="examples/tasks/python_email_repair.json">Repair-loop fixture</option>
             </select>
           </div>
-          <div>
+          <div class="field">
             <label for="sandbox">Sandbox</label>
             <select id="sandbox">
               <option value="local">Local trusted fixture</option>
               <option value="e2b">E2B blocker proof</option>
             </select>
           </div>
-        </div>
-        <button onclick="runTask()">Run fixture</button>
-        <div id="run-status" class="empty"></div>
-      </div>
-      <div class="panel-header">
-        <div>
-          <h2>Runs</h2>
-          <p class="panel-kicker" id="run-count">Loading...</p>
+          <button id="run-btn" class="block" onclick="runTask()">Run fixture</button>
+          <div id="run-status" class="run-hint"></div>
         </div>
       </div>
-      <div id="runs"></div>
+      <div>
+        <div class="side-head">
+          <span class="eyebrow">Runs</span>
+          <span class="count" id="run-count">…</span>
+        </div>
+        <div id="runs" class="runs"></div>
+      </div>
     </aside>
     <section>
-      <div class="grid">
-        <div class="panel metric">
-          <div class="panel-header"><h2>Status</h2></div>
-          <div id="status" class="empty">Select a run.</div>
-        </div>
-        <div class="panel metric">
-          <div class="panel-header"><h2>Selected Files</h2></div>
-          <div id="selected" class="empty">No run selected.</div>
-        </div>
-        <div class="panel metric">
-          <div class="panel-header"><h2>Attempts</h2></div>
-          <div id="attempts" class="empty">No run selected.</div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Trace Events</h2>
-            <p class="panel-kicker" id="event-count"></p>
+      <div class="content">
+        <div class="panel">
+          <div class="pb">
+            <div class="run-head" id="run-head">
+              <div class="title">
+                <span class="id" id="rh-id">No run selected</span>
+                <span class="task" id="rh-task">Pick a run from the left, or start a new fixture run.</span>
+              </div>
+              <span class="status pending" id="rh-status" style="display:none"></span>
+            </div>
           </div>
         </div>
-        <div id="events" class="empty">No run selected.</div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2>Final Report</h2></div>
-        <pre id="report">No run selected.</pre>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2>Patch Diff</h2></div>
-        <pre id="patch">No run selected.</pre>
+        <div class="cards">
+          <div class="card">
+            <span class="eyebrow">Status</span>
+            <div id="status"><span class="empty">—</span></div>
+          </div>
+          <div class="card">
+            <span class="eyebrow">Selected files</span>
+            <div id="selected"><span class="empty">—</span></div>
+          </div>
+          <div class="card">
+            <span class="eyebrow">Attempts</span>
+            <div id="attempts"><span class="empty">—</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>Trace events</h2><span class="count" id="event-count"></span></div>
+          <div id="events"><div class="pb"><span class="empty">No run selected.</span></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>Final report</h2></div>
+          <div class="pb"><pre id="report"><span class="empty">No run selected.</span></pre></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>Patch diff</h2></div>
+          <div class="pb"><pre id="patch"><span class="empty">No run selected.</span></pre></div>
+        </div>
       </div>
     </section>
   </main>
@@ -472,7 +423,7 @@ def render_dashboard_html() -> str:
         const res = await fetch('/api/runs');
         if (!res.ok) throw new Error('Unable to load runs.');
         const runs = await res.json();
-        document.getElementById('run-count').textContent = `${runs.length} ${runs.length === 1 ? 'run' : 'runs'}`;
+        document.getElementById('run-count').textContent = String(runs.length);
         if (!runs.length) {
           box.innerHTML = '<div class="empty">No runs yet.</div>';
           return;
@@ -480,42 +431,50 @@ def render_dashboard_html() -> str:
         box.innerHTML = runs.map(run => {
           const runId = escapeHtml(String(run.run_id || ''));
           const taskId = escapeHtml(String(run.task_id || 'Unknown task'));
-          const status = escapeHtml(String(run.status || 'PENDING'));
           const activeClass = run.run_id === activeRunId ? ' active' : '';
-          const runValue = escapeHtml(String(run.run_id || ''));
           return `
-          <div class="run${activeClass}" data-run-id="${runValue}">
+          <div class="run${activeClass}" data-run-id="${runId}" title="${runId}">
             <div class="run-top">
-              <strong>${taskId}</strong>
-              <span class="status ${statusClass(run.status)}">${status}</span>
+              <span class="run-task">${taskId}</span>
+              <span class="status dot-only ${statusClass(run.status)}" title="${escapeHtml(String(run.status || 'PENDING'))}"></span>
             </div>
-            <span>${runId}</span>
+            <span class="run-id">${runId}</span>
           </div>`;
         }).join('');
         box.querySelectorAll('.run').forEach(card => {
           card.addEventListener('click', () => loadRun(card.dataset.runId || ''));
         });
       } catch (error) {
-        document.getElementById('run-count').textContent = 'Unavailable';
+        document.getElementById('run-count').textContent = '!';
         box.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Unable to load runs.')}</div>`;
       }
     }
 
     async function runTask() {
+      const btn = document.getElementById('run-btn');
       const status = document.getElementById('run-status');
-      status.textContent = 'Running...';
-      const res = await fetch('/api/run', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          task: document.getElementById('task').value,
-          sandbox: document.getElementById('sandbox').value
-        })
-      });
-      const data = await res.json();
-      status.textContent = data.status + (data.report_path ? ' - ' + data.report_path : '');
-      await refreshRuns();
-      if (data.run_id) await loadRun(data.run_id);
+      btn.disabled = true;
+      btn.textContent = 'Running…';
+      status.textContent = 'Starting run…';
+      try {
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            task: document.getElementById('task').value,
+            sandbox: document.getElementById('sandbox').value
+          })
+        });
+        const data = await res.json();
+        status.textContent = data.error ? `Error: ${data.error}` : (data.status || 'Done');
+        await refreshRuns();
+        if (data.run_id) await loadRun(data.run_id);
+      } catch (e) {
+        status.textContent = `Error: ${e.message || e}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run fixture';
+      }
     }
 
     async function loadRun(id) {
@@ -523,58 +482,91 @@ def render_dashboard_html() -> str:
       const res = await fetch('/api/runs/' + encodeURIComponent(id));
       const data = await res.json();
       if (data.error) {
-        document.getElementById('status').innerHTML = `<div class="empty">${escapeHtml(data.error)}</div>`;
+        document.getElementById('rh-id').textContent = 'Run not found';
         return;
       }
       const run = data.run || {};
+      const status = String(run.status || 'PENDING');
       const selected = (data.selected_files || []).map(item => item.path || item);
-      const attempts = (data.attempts || []).map(item => `attempt ${item.attempt}: ${item.result}`);
+      const attempts = (data.attempts || []);
       const events = data.events || [];
-      document.getElementById('status').innerHTML = `
-        <div class="metric-value">${escapeHtml(String(run.run_id || 'Unknown run'))}</div>
-        <div class="metric-meta">${escapeHtml(String(run.task_id || 'Unknown task'))}</div>
-        <div class="fine-print">
-          <span class="status ${statusClass(run.status)}">${escapeHtml(String(run.status || 'PENDING'))}</span>
-        </div>`;
-      document.getElementById('selected').innerHTML = renderList(selected);
-      document.getElementById('attempts').innerHTML = renderList(attempts);
+
+      document.getElementById('rh-id').textContent = String(run.run_id || 'Unknown run');
+      document.getElementById('rh-task').textContent = String(run.task_id || 'Unknown task');
+      const rhStatus = document.getElementById('rh-status');
+      rhStatus.style.display = '';
+      rhStatus.className = 'status ' + statusClass(status);
+      rhStatus.textContent = status;
+
+      document.getElementById('status').innerHTML =
+        `<span class="status ${statusClass(status)}" style="font-size:13px">${escapeHtml(status)}</span>`;
+      document.getElementById('selected').innerHTML = renderList(selected, 'file');
+      document.getElementById('attempts').innerHTML = renderAttempts(attempts);
       document.getElementById('event-count').textContent = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
       document.getElementById('events').innerHTML = renderEvents(events);
-      document.getElementById('report').textContent = data.report || 'No report.';
-      document.getElementById('patch').textContent = data.patch || 'No patch.';
+      renderReport(data.report);
+      renderPatch(data.patch);
       await refreshRuns();
     }
 
-    function renderList(items) {
-      if (!items.length) return '<div class="empty">None</div>';
-      return '<ul>' + items.map(item => `<li>${escapeHtml(String(item))}</li>`).join('') + '</ul>';
+    function renderList(items, kind) {
+      if (!items.length) return '<span class="empty">None</span>';
+      return '<ul>' + items.map(item => `<li title="${escapeHtml(String(item))}">${escapeHtml(String(item))}</li>`).join('') + '</ul>';
+    }
+
+    function renderAttempts(attempts) {
+      if (!attempts.length) return '<span class="empty">None</span>';
+      return `<div class="big">${attempts.length}</div><ul>` +
+        attempts.map(a => `<li class="muted">#${escapeHtml(String(a.attempt))} · ${escapeHtml(String(a.result || ''))}</li>`).join('') +
+        '</ul>';
     }
 
     function renderEvents(events) {
-      if (!events.length) return '<div class="empty">None</div>';
-      return `<div class="table-wrap">
+      if (!events.length) return '<div class="pb"><span class="empty">None</span></div>';
+      return `<div class="table-scroll">
         <table><thead><tr><th>Time</th><th>State</th><th>Kind</th><th>Message</th></tr></thead><tbody>
         ${events.map(e => {
           const time = String(e.timestamp || '').split('T').pop().slice(0,8);
           return `<tr>
-            <td>${escapeHtml(time)}</td>
-            <td>${escapeHtml(e.state || '')}</td>
-            <td>${escapeHtml(e.kind || '')}</td>
-            <td>${escapeHtml(e.message || '')}</td>
+            <td class="t-time">${escapeHtml(time)}</td>
+            <td class="t-state">${escapeHtml(e.state || '')}</td>
+            <td class="t-kind">${escapeHtml(e.kind || '')}</td>
+            <td class="t-msg">${escapeHtml(e.message || '')}</td>
           </tr>`;
         }).join('')}
       </tbody></table></div>`;
     }
 
+    function renderReport(report) {
+      const el = document.getElementById('report');
+      if (!report) { el.innerHTML = '<span class="empty">No report.</span>'; return; }
+      el.textContent = report;
+    }
+
+    function renderPatch(patch) {
+      const el = document.getElementById('patch');
+      if (!patch) { el.innerHTML = '<span class="empty">No patch.</span>'; return; }
+      el.innerHTML = String(patch).split('\\n').map(line => {
+        const safe = escapeHtml(line);
+        let cls = '';
+        if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('diff ') || line.startsWith('index ')) cls = 'diff-meta';
+        else if (line.startsWith('@@')) cls = 'diff-hunk';
+        else if (line.startsWith('+')) cls = 'diff-add';
+        else if (line.startsWith('-')) cls = 'diff-del';
+        return `<span class="diff-line ${cls}">${safe || ' '}</span>`;
+      }).join('');
+    }
+
     function statusClass(status) {
-      if ((status || '').includes('SUCCESS')) return 'ok';
-      if ((status || '').includes('FAILED')) return 'failed';
-      if ((status || '').includes('ESCALATED') || (status || '').includes('blocked')) return 'blocked';
+      const s = String(status || '').toUpperCase();
+      if (s.includes('SUCCESS')) return 'ok';
+      if (s.includes('FAILED')) return 'failed';
+      if (s.includes('ESCALATED') || s.includes('BLOCKED')) return 'blocked';
       return 'pending';
     }
 
     function escapeHtml(value) {
-      return value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+      return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     }
 
     refreshRuns();
