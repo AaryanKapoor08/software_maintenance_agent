@@ -479,6 +479,9 @@ def render_dashboard_html() -> str:
 
     async function loadRun(id) {
       activeRunId = id;
+      if (id && location.hash.slice(1) !== id) {
+        history.replaceState(null, '', '#' + id);
+      }
       const res = await fetch('/api/runs/' + encodeURIComponent(id));
       const data = await res.json();
       if (data.error) {
@@ -569,7 +572,18 @@ def render_dashboard_html() -> str:
       return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     }
 
-    refreshRuns();
+    async function init() {
+      await refreshRuns();
+      const fromHash = decodeURIComponent(location.hash.slice(1));
+      if (fromHash) await loadRun(fromHash);
+    }
+
+    window.addEventListener('hashchange', () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (id && id !== activeRunId) loadRun(id);
+    });
+
+    init();
   </script>
 </body>
 </html>
