@@ -4,6 +4,33 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+ENV_FILES = (".env.local", ".env")
+
+
+def load_env_files(base_dir: Path | None = None) -> None:
+    """Load KEY=VALUE lines from .env.local/.env into os.environ.
+
+    Existing environment variables always win; files never override them.
+    """
+    root = base_dir or Path.cwd()
+    for name in ENV_FILES:
+        path = root / name
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8-sig")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -17,6 +44,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
+        load_env_files()
         return cls(
             database_url=os.getenv("AMA_DATABASE_URL", cls.database_url),
             llm_provider=os.getenv("AMA_LLM_PROVIDER", cls.llm_provider),
