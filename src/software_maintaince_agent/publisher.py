@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import stat
 import subprocess
 from pathlib import Path
 
@@ -34,12 +36,12 @@ def publish_patch(
     if not is_remote_repo(task.repo_url):
         raise PublishError("Publishing requires a remote git URL as the task repo_url.")
 
-    workdir = run_dir / "publish"
+    workdir = (run_dir / "publish").resolve()
     if workdir.exists():
-        shutil.rmtree(workdir)
+        _force_rmtree(workdir)
     branch = f"ama/{run_id}"
 
-    _git(["clone", "--depth", "1", task.repo_url, str(workdir)], cwd=run_dir)
+    _git(["clone", "--depth", "1", task.repo_url, str(workdir)], cwd=run_dir.resolve())
     _git(["checkout", "-b", branch], cwd=workdir)
     _git(["apply", "--whitespace=nowarn", str(patch_path.resolve())], cwd=workdir)
     _git(["add", "-A"], cwd=workdir)
@@ -104,6 +106,19 @@ def _create_draft_pr(task: MaintenanceTask, run_id: str, branch: str, workdir: P
         if line.startswith("https://"):
             return line
     return None
+
+
+def _force_rmtree(path: Path) -> None:
+    """Remove a tree that may contain git's read-only pack files (Windows)."""
+
+    def on_error(func, target, _exc):  # noqa: ANN001 - shutil onexc signature
+        try:
+            os.chmod(target, stat.S_IWRITE)
+            func(target)
+        except OSError:
+            pass
+
+    shutil.rmtree(path, onexc=on_error)
 
 
 def _git(args: list[str], cwd: Path) -> None:
