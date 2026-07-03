@@ -87,6 +87,21 @@ def test_llm_patcher_raises_on_non_object_response(tmp_path: Path) -> None:
         LLMPatcher(FakeProvider([1, 2, 3])).plan_changes(repo, task, ["src/app.py"])
 
 
+def test_llm_patcher_creates_new_file_in_new_directory(tmp_path: Path) -> None:
+    from software_maintaince_agent.patching import write_changes
+
+    task = load_task(Path("examples/tasks/python_email_empty.json"))
+    repo = make_repo(tmp_path)
+    provider = FakeProvider(
+        {"changes": [{"path": "src/new/deep/module.py", "content": "VALUE = 1\n"}]}
+    )
+    changes = LLMPatcher(provider).plan_changes(repo, task, ["src/app.py"])
+    assert changes[0].before == ""
+    # write must materialize a brand-new nested path without crashing
+    write_changes(repo, task, changes)
+    assert (repo / "src/new/deep/module.py").read_text(encoding="utf-8") == "VALUE = 1\n"
+
+
 def test_gemini_extract_json() -> None:
     body = {"candidates": [{"content": {"parts": [{"text": '{"changes": []}'}]}}]}
     assert GeminiProvider._extract_json(body) == {"changes": []}

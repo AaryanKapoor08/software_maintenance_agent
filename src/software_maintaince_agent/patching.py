@@ -42,6 +42,7 @@ def write_changes(repo_dir: Path, task: MaintenanceTask, changes: list[FileChang
         validate_patch_path(change.path, task)
         target = (repo_dir / change.path).resolve()
         target.relative_to(repo_dir.resolve())
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(change.after, encoding="utf-8")
         diff_parts.append(unified_diff(change))
     return "\n".join(diff_parts)

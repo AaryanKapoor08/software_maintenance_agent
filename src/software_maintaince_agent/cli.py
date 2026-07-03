@@ -12,6 +12,7 @@ from software_maintaince_agent.agent import SoftwareMaintainceAgent, load_task
 from software_maintaince_agent.dashboard import serve_dashboard
 from software_maintaince_agent.evals.benchmark import run_retrieval_benchmark
 from software_maintaince_agent.github_integration import fetch_issue_task
+from software_maintaince_agent.publisher import PublishError, publish_patch
 from software_maintaince_agent.settings import Settings
 from software_maintaince_agent.storage import TraceStore
 
@@ -51,10 +52,20 @@ def run(
     if report.patch_path:
         console.print(f"[bold]Patch:[/bold] {report.patch_path}")
     if create_pr:
-        console.print(
-            "[yellow]Draft PR creation is gated behind GITHUB_TOKEN and controlled-repo proof. "
-            "A local patch report was generated for this run.[/yellow]"
-        )
+        if report.status != "success" or not report.report_path:
+            console.print("[yellow]Skipping publish: only successful runs with a patch are published.[/yellow]")
+            return
+        run_dir = Path(report.report_path).parent
+        run_id = run_dir.name
+        trace_store = TraceStore(run_dir / "trace.sqlite")
+        try:
+            published = publish_patch(maintenance_task, report, run_id, run_dir, trace_store)
+        except PublishError as exc:
+            console.print(f"[red]Publish failed:[/red] {exc}")
+            return
+        console.print(f"[bold]Branch:[/bold] {published['branch']}")
+        if published.get("pr_url"):
+            console.print(f"[bold]Draft PR:[/bold] {published['pr_url']}")
 
 
 @app.command()

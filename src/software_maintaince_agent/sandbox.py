@@ -137,13 +137,14 @@ class LocalSandbox:
         return
 
 
-SANDBOX_IMAGE = "ama-sandbox:py312"
+SANDBOX_IMAGE = "ama-sandbox:py312-node"
 SANDBOX_DOCKERFILE = """\
 FROM python:3.12-slim
 RUN apt-get update \\
-    && apt-get install -y --no-install-recommends git ripgrep \\
+    && apt-get install -y --no-install-recommends git ripgrep nodejs npm \\
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir pytest
+RUN npm install -g typescript@5 --no-audit --no-fund
 WORKDIR /work
 """
 
@@ -196,7 +197,7 @@ class DockerSandbox:
             error="Failed to start the sandbox container.",
         )
         self._started = True
-        self._install_dependencies()
+        self._install_dependencies(task)
         self._disconnect_network()
         self.trace.event(
             self.run_id,
@@ -373,12 +374,15 @@ class DockerSandbox:
             {"repo_dir": str(self.repo_dir)},
         )
 
-    def _install_dependencies(self) -> None:
+    def _install_dependencies(self, task: MaintenanceTask | None = None) -> None:
         install: list[str] | None = None
         if (self.repo_dir / "requirements.txt").exists():
             install = ["pip", "install", "--no-cache-dir", "-r", "requirements.txt"]
         elif (self.repo_dir / "pyproject.toml").exists():
             install = ["pip", "install", "--no-cache-dir", "-e", "."]
+        elif (self.repo_dir / "package.json").exists() and needs_npm_install(task):
+            lockfile = (self.repo_dir / "package-lock.json").exists()
+            install = ["npm", "ci" if lockfile else "install", "--no-audit", "--no-fund"]
         if not install:
             return
         proc = subprocess.run(
@@ -428,6 +432,13 @@ class DockerSandbox:
 
 def is_remote_repo(repo_url: str) -> bool:
     return repo_url.startswith(("http://", "https://", "git@", "ssh://"))
+
+
+def needs_npm_install(task: MaintenanceTask | None) -> bool:
+    """node_modules is only worth installing when verification actually runs through npm;
+    standalone verifiers (tsc on a file, node --check) work from the base image."""
+    command = (task.focused_test_command or "") if task else ""
+    return command.strip().startswith("npm")
 
 
 class E2BSandbox:

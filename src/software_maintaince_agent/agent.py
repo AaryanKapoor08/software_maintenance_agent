@@ -199,7 +199,7 @@ class SoftwareMaintainceAgent:
 
             try:
                 write_changes(repo_dir, task, changes)
-            except PatchSafetyError as exc:
+            except (PatchSafetyError, OSError) as exc:
                 attempts.append(
                     PatchAttempt(
                         attempt=attempt_number,
@@ -232,6 +232,11 @@ class SoftwareMaintainceAgent:
             if commands_run and all(result.status == CommandStatus.PASSED for result in commands_run):
                 broad_commands = [command for command in summary.test_commands if command != focused_command]
                 for command in broad_commands[:1]:
+                    if runner_unavailable(command, repo_dir):
+                        note = f"Skipped broad check `{command}`: its runner is not installed in the sandbox."
+                        if note not in known_limitations:
+                            known_limitations.append(note)
+                        continue
                     broad_result = sandbox.run(command)
                     commands_run.append(broad_result)
                     final_tests.append(broad_result)
@@ -346,6 +351,14 @@ class SoftwareMaintainceAgent:
         trace.event(run_id, "blocker", reason, {"task_id": task.id}, RunState.ESCALATED)
         trace.update_status(run_id, RunState.FINALIZED_FAILED)
         return report
+
+
+def runner_unavailable(command: str, repo_dir: Path) -> bool:
+    """A broad check whose toolchain was never installed is unavailable, not failing."""
+    head = command.strip().split()[0] if command.strip() else ""
+    if head in {"npm", "npx", "yarn", "pnpm"}:
+        return not (repo_dir / "node_modules").exists()
+    return False
 
 
 def command_feedback(result: CommandResult) -> dict:

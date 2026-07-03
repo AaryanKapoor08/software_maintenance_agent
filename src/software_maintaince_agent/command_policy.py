@@ -48,6 +48,9 @@ class CommandPolicy:
         ("npm", "run", "test"),
         ("npm", "run", "lint"),
         ("npm", "run", "typecheck"),
+        ("npx", "tsc"),
+        ("tsc",),
+        ("node", "--check"),
         ("ruff", "check"),
         ("mypy",),
     )

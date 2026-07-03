@@ -38,7 +38,9 @@ flowchart LR
 | `local` | Directory copy + command allowlist only | Trusted bundled fixtures |
 | `e2b` | Not enabled in this build; records a blocker | Escalation-path proof |
 
-The Docker sandbox builds a small `ama-sandbox:py312` image on first use (python 3.12, pytest, git, ripgrep), materializes the repository (local copy or shallow `git clone` for URLs), installs dependencies while the container still has network access, then disconnects the network before any agent command runs. Every command additionally passes the same allowlist policy used by the local sandbox.
+The Docker sandbox builds a small `ama-sandbox:py312-node` image on first use (python 3.12, pytest, node, typescript, git, ripgrep), materializes the repository (local copy or shallow `git clone` for URLs), installs dependencies while the container still has network access, then disconnects the network before any agent command runs. Every command additionally passes the same allowlist policy used by the local sandbox.
+
+Python repos verify with pytest; Node/TypeScript repos verify with `npm test`/`npm run lint` (dependencies auto-installed when the task's focused command needs npm) or standalone `npx tsc --noEmit <file>` / `node --check <file>` checks that need no install.
 
 ## Patch planning
 
@@ -69,6 +71,14 @@ The example task copies the fixture project into `runs/`, reproduces the failing
 - `patch.diff`
 - `trace.sqlite`
 - run details as JSON
+
+## Publishing patches
+
+```bash
+python -m software_maintaince_agent.cli run --task <task.json> --sandbox docker --create-pr
+```
+
+After a successful run against a remote repository, `--create-pr` pushes the patch to a fresh `ama/<run_id>` branch (never the default branch) and opens a **draft** pull request via the `gh` CLI when it is authenticated. The branch push and PR URL are recorded in the run trace and `publish.json`.
 
 ## Benchmark
 
