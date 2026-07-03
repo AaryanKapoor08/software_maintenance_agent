@@ -1,0 +1,15 @@
+{
+  "id": "medbuddy_negation",
+  "source": "github_issue",
+  "repo_url": "https://github.com/AaryanKapoor08/medbuddy",
+  "title": "Emergency detector must be negation-aware",
+  "body": "detectEmergency() in server/src/utils/emergencyDetector.ts flags a keyword even when it is explicitly negated. For example 'I do not have chest pain', 'no difficulty breathing', and 'denies chest pain' are all reported as emergencies, which is wrong and dangerous for triage. Make detection negation-aware: when a matched keyword is directly negated by a preceding negation cue within a few words ('no', 'not', \"n't\", 'without', 'denies', 'denied', 'never', 'negative for'), that keyword must NOT count toward the result. A sentence like 'I have chest pain but no dizziness' must still flag 'chest pain' (high) while excluding 'dizziness'. Preserve the exported API (detectEmergency / requiresImmediateAction), the EmergencyDetectionResult shape, and the existing severity precedence. Only edit server/src/utils/emergencyDetector.ts.",
+  "labels": [
+    "bug"
+  ],
+  "allowed_paths": [
+    "server/**"
+  ],
+  "focused_test_command": "npx tsc --noEmit --strict server/src/utils/emergencyDetector.ts",
+  "max_attempts": 3
+}
