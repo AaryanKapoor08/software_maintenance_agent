@@ -23,7 +23,7 @@ console = Console()
 def run(
     task: Annotated[Path | None, typer.Option("--task", help="Local task JSON file.")] = None,
     issue: Annotated[str | None, typer.Option("--issue", help="GitHub issue URL.")] = None,
-    sandbox: Annotated[str, typer.Option("--sandbox", help="Sandbox adapter: local or e2b.")] = "local",
+    sandbox: Annotated[str, typer.Option("--sandbox", help="Sandbox adapter: docker, local, or e2b.")] = "docker",
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Validate and plan without edits.")] = False,
     create_pr: Annotated[bool, typer.Option("--create-pr", help="Create draft PR when configured.")] = False,
 ) -> None:

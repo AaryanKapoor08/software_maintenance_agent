@@ -9,8 +9,9 @@ from software_maintaince_agent.settings import Settings
 
 def test_dashboard_html_contains_runner_controls() -> None:
     html = render_dashboard_html()
-    assert "software_maintaince agent" in html
-    assert "Run Fixture" in html
+    assert "MAINTENANCE&nbsp;AGENT" in html
+    assert "Run fixture" in html
+    assert 'value="docker"' in html
     assert "/api/run" in html
 
 

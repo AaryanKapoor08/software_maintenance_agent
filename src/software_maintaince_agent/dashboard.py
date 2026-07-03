@@ -412,6 +412,7 @@ def render_dashboard_html() -> str:
         <div class="field">
           <label for="sandbox">Sandbox</label>
           <select id="sandbox">
+            <option value="docker">Docker isolated</option>
             <option value="local">Local trusted fixture</option>
             <option value="e2b">E2B blocker proof</option>
           </select>

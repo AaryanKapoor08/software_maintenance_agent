@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
-from software_maintaince_agent.llm import provider_for
+from software_maintaince_agent.llm import LLMError, LLMProvider, ProviderStatus, provider_for
 from software_maintaince_agent.models import (
     AgentPlan,
     CommandResult,
@@ -15,12 +15,19 @@ from software_maintaince_agent.models import (
     PatchAttempt,
     RunState,
 )
-from software_maintaince_agent.patching import FileChange, HeuristicPatcher, PatchSafetyError, unified_diff, write_changes
+from software_maintaince_agent.patching import (
+    FileChange,
+    HeuristicPatcher,
+    LLMPatcher,
+    PatchSafetyError,
+    unified_diff,
+    write_changes,
+)
 from software_maintaince_agent.repo_inspect import inspect_repo, iter_repo_files
 from software_maintaince_agent.report import write_report
 from software_maintaince_agent.retrieval import hybrid_retrieve, lexical_retrieve
 from software_maintaince_agent.risk import score_risk
-from software_maintaince_agent.sandbox import E2BSandbox, LocalSandbox, SandboxError
+from software_maintaince_agent.sandbox import DockerSandbox, E2BSandbox, LocalSandbox, SandboxError
 from software_maintaince_agent.settings import Settings
 from software_maintaince_agent.storage import TraceStore
 
@@ -82,6 +89,21 @@ class SoftwareMaintainceAgent:
         except SandboxError as exc:
             return self._finalize_blocked(run_id, run_dir, trace, task, str(exc))
 
+        try:
+            return self._run_in_sandbox(sandbox, task, run_id, run_dir, trace, provider, provider_status)
+        finally:
+            sandbox.close()
+
+    def _run_in_sandbox(
+        self,
+        sandbox: LocalSandbox | DockerSandbox,
+        task: MaintenanceTask,
+        run_id: str,
+        run_dir: Path,
+        trace: TraceStore,
+        provider: LLMProvider,
+        provider_status: ProviderStatus,
+    ) -> FinalReport:
         repo_dir = sandbox.repo_dir
         original_snapshot = snapshot_repo(repo_dir)
         summary = inspect_repo(repo_dir, task)
@@ -122,24 +144,57 @@ class SoftwareMaintainceAgent:
         (run_dir / "agent_plan.json").write_text(plan.model_dump_json(indent=2), encoding="utf-8")
 
         attempts: list[PatchAttempt] = []
-        patcher = HeuristicPatcher()
+        heuristic = HeuristicPatcher()
+        llm_patcher: LLMPatcher | None = None
+        if provider_status.available and provider.can_generate:
+            llm_patcher = LLMPatcher(provider)
         final_tests: list[CommandResult] = []
         patch_diff = ""
         changed_files: list[str] = []
         known_limitations: list[str] = []
 
+        feedback: dict | None = None
+        if baseline_result and baseline_result.status != CommandStatus.PASSED:
+            feedback = command_feedback(baseline_result)
+
         for attempt_number in range(1, task.max_attempts + 1):
             selected_files = plan.files_to_edit or plan.files_to_read
-            changes = patcher.plan_changes(repo_dir, task, selected_files, attempt_number)
+            changes: list[FileChange] = []
+            if llm_patcher:
+                try:
+                    changes = llm_patcher.plan_changes(
+                        repo_dir, task, plan.files_to_read or selected_files, attempt_number, feedback
+                    )
+                    trace.event(
+                        run_id,
+                        "patcher",
+                        f"LLM proposed changes to {len(changes)} file(s) on attempt {attempt_number}",
+                        {
+                            "provider": provider_status.name,
+                            "attempt": attempt_number,
+                            "files": [change.path for change in changes],
+                            "reasoning": llm_patcher.last_reasoning,
+                        },
+                    )
+                except (LLMError, PatchSafetyError) as exc:
+                    trace.event(
+                        run_id,
+                        "patcher",
+                        f"LLM patcher failed on attempt {attempt_number}; using deterministic fallback",
+                        {"error": str(exc)},
+                    )
+                    known_limitations.append(f"LLM patcher failed on attempt {attempt_number}: {exc}")
+            if not changes:
+                changes = heuristic.plan_changes(repo_dir, task, selected_files, attempt_number)
             if not changes:
                 attempts.append(
                     PatchAttempt(
                         attempt=attempt_number,
                         result="blocked",
-                        failure_reason="No safe deterministic patch was identified.",
+                        failure_reason="No safe patch was identified.",
                     )
                 )
-                known_limitations.append("The local fallback patcher could not identify a safe edit.")
+                known_limitations.append("No patcher could identify a safe edit.")
                 break
 
             try:
@@ -155,7 +210,7 @@ class SoftwareMaintainceAgent:
                 known_limitations.append(str(exc))
                 break
 
-            changed_files = [change.path for change in changes]
+            changed_files = sorted(dict.fromkeys([*changed_files, *(change.path for change in changes)]))
             patch_diff = cumulative_diff(repo_dir, original_snapshot, changed_files)
             (run_dir / "patch.diff").write_text(patch_diff, encoding="utf-8")
             trace.update_status(run_id, RunState.PATCH_APPLIED)
@@ -184,9 +239,12 @@ class SoftwareMaintainceAgent:
             else:
                 result = "failed"
 
+            if result == "failed" and commands_run:
+                feedback = command_feedback(commands_run[-1])
+
             attempt = PatchAttempt(
                 attempt=attempt_number,
-                files_changed=changed_files,
+                files_changed=[change.path for change in changes],
                 diff_summary=summarize_diff(changed_files, patch_diff),
                 commands_run=commands_run,
                 result=result,
@@ -248,11 +306,15 @@ class SoftwareMaintainceAgent:
         run_dir: Path,
         trace: TraceStore,
         task: MaintenanceTask,
-    ) -> LocalSandbox:
+    ) -> LocalSandbox | DockerSandbox:
+        if sandbox_kind == "docker":
+            sandbox = DockerSandbox(run_id, run_dir, trace)
+            sandbox.prepare(task)
+            trace.update_status(run_id, RunState.REPO_CLONED)
+            return sandbox
         if sandbox_kind == "e2b":
             prepared = E2BSandbox(run_id, run_dir, trace).prepare(task)
-            if prepared.blocker:
-                raise SandboxError(prepared.blocker)
+            raise SandboxError(prepared.blocker or "E2B remote execution is not enabled in this build.")
         sandbox = LocalSandbox(run_id, run_dir, trace, trusted_fixture=task.source == "local_fixture")
         sandbox.prepare(task)
         trace.update_status(run_id, RunState.REPO_CLONED)
@@ -284,6 +346,14 @@ class SoftwareMaintainceAgent:
         trace.event(run_id, "blocker", reason, {"task_id": task.id}, RunState.ESCALATED)
         trace.update_status(run_id, RunState.FINALIZED_FAILED)
         return report
+
+
+def command_feedback(result: CommandResult) -> dict:
+    return {
+        "command": result.command,
+        "failure_summary": result.failure_summary or "",
+        "output": f"{result.stdout}\n{result.stderr}"[-3000:],
+    }
 
 
 def build_agent_plan(task: MaintenanceTask, selected_files: list[str], test_commands: list[str]) -> AgentPlan:

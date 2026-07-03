@@ -4,6 +4,7 @@ import difflib
 import fnmatch
 from pathlib import Path
 
+from software_maintaince_agent.llm import LLMError, LLMProvider
 from software_maintaince_agent.models import FileChange, MaintenanceTask
 
 
@@ -55,6 +56,7 @@ class HeuristicPatcher:
         task: MaintenanceTask,
         selected_files: list[str],
         attempt: int = 1,
+        feedback: dict | None = None,
     ) -> list[FileChange]:
         title_body = f"{task.title}\n{task.body}".lower()
         if "email" in title_body and ("empty" in title_body or "blank" in title_body):
@@ -129,3 +131,96 @@ class HeuristicPatcher:
             )
             return FileChange(path=rel_path, before=before, after=after)
         return None
+
+
+MAX_PROMPT_FILES = 6
+MAX_FILE_CHARS = 12_000
+
+
+class LLMPatcher:
+    """Plans repository edits with an LLM provider and validates them into FileChange objects."""
+
+    def __init__(self, provider: LLMProvider) -> None:
+        self.provider = provider
+        self.last_reasoning: str = ""
+
+    def plan_changes(
+        self,
+        repo_dir: Path,
+        task: MaintenanceTask,
+        selected_files: list[str],
+        attempt: int = 1,
+        feedback: dict | None = None,
+    ) -> list[FileChange]:
+        prompt = self.build_prompt(repo_dir, task, selected_files, attempt, feedback)
+        data = self.provider.generate_json(prompt)
+        if not isinstance(data, dict):
+            raise LLMError("LLM response was not a JSON object.")
+        self.last_reasoning = str(data.get("reasoning", ""))[:1200]
+        changes: list[FileChange] = []
+        for item in data.get("changes", []):
+            if not isinstance(item, dict):
+                continue
+            path = str(item.get("path", "")).replace("\\", "/").strip()
+            content = item.get("content")
+            if not path or not isinstance(content, str):
+                continue
+            validate_patch_path(path, task)
+            target = repo_dir / path
+            before = ""
+            if target.exists():
+                before = target.read_text(encoding="utf-8")
+            if content == before:
+                continue
+            changes.append(FileChange(path=path, before=before, after=content))
+        return changes
+
+    def build_prompt(
+        self,
+        repo_dir: Path,
+        task: MaintenanceTask,
+        selected_files: list[str],
+        attempt: int,
+        feedback: dict | None,
+    ) -> str:
+        sections = [
+            "You are an autonomous software maintenance engineer. Produce a minimal, safe patch "
+            "that resolves the issue below. Tests will be run against your patch in a sandbox.",
+            f"## Issue\nTitle: {task.title}\n{task.body}".strip(),
+            "## Rules\n"
+            "- Change as few files and lines as possible.\n"
+            "- Do not add new dependencies or change build configuration.\n"
+            f"- You may only modify paths matching: {task.allowed_paths or ['any']}.\n"
+            f"- Never touch paths matching: {task.blocked_paths}.\n"
+            "- Do not modify test files unless the issue is in the tests themselves.\n"
+            "- Return the COMPLETE new content for every file you change.",
+        ]
+        if attempt > 1 or feedback:
+            fb = feedback or {}
+            sections.append(
+                f"## Previous result (attempt {attempt - 1 if attempt > 1 else 'baseline'})\n"
+                f"Command: {fb.get('command', 'n/a')}\n"
+                f"Failure summary: {fb.get('failure_summary', 'n/a')}\n"
+                f"Output excerpt:\n{fb.get('output', '')[:3000]}"
+            )
+            if attempt > 1:
+                sections.append(
+                    "Your previous patch (already applied to the files shown below) did not pass. "
+                    "Analyze the failure output and fix the remaining problem."
+                )
+        file_parts: list[str] = []
+        for rel_path in list(dict.fromkeys(selected_files))[:MAX_PROMPT_FILES]:
+            target = repo_dir / rel_path
+            if not target.exists():
+                continue
+            try:
+                content = target.read_text(encoding="utf-8")[:MAX_FILE_CHARS]
+            except (UnicodeDecodeError, OSError):
+                continue
+            file_parts.append(f"### {rel_path}\n```\n{content}\n```")
+        sections.append("## Repository files\n" + "\n\n".join(file_parts))
+        sections.append(
+            '## Output format\nRespond with JSON only: {"reasoning": "<short explanation>", '
+            '"changes": [{"path": "<repo-relative path>", "content": "<complete new file content>"}]}'
+        )
+        return "\n\n".join(sections)
