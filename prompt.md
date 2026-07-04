@@ -144,6 +144,12 @@ These have all bitten before — make sure none can surface live:
   keep the suite green so regressions can't creep back.
 - **A single flaky Gemini attempt** → `max_attempts: 3` gives the repair loop room;
   the fallback task gives you a second option.
+- **Gemini free-tier quota (20 generate requests/day per model)** → each run burns
+  1 request per attempt. Do NOT burn rehearsal runs on demo day; keep ≥6 requests
+  of headroom (two full runs). The provider now honors the server's retry-delay
+  hint on 429s, so a rate-limit window mid-run stalls ~40-90s instead of failing —
+  but a fully drained daily bucket cannot be waited out live. If cornered, switch
+  buckets with `AMA_GEMINI_MODEL` (quota is per-model) or use a paid-tier key.
 - **Container leak** → each run cleans up; verify `docker ps -a` is empty after
   rehearsal.
 - **Rehearse the exact commands you'll type**, in order, once, start to finish. The
