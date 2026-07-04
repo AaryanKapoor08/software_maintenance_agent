@@ -19,7 +19,7 @@
     "secrets/**"
   ],
   "max_attempts": 3,
-  "focused_test_command": "npx tsc --noEmit --strict server/src/utils/emergencyDetector.ts",
+  "focused_test_command": "npx tsc --noEmit --strict --target es2020 server/src/utils/emergencyDetector.ts",
   "expected_relevant_files": [],
   "expected_changed_files": []
 }

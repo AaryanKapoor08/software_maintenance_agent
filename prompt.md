@@ -76,7 +76,9 @@ headline task (self-contained, impressive, verifiable):
 
 This spans real logic (not a one-liner), is easy to narrate ("watch it understand
 *not*"), and verifies cleanly with
-`npx tsc --noEmit --strict server/src/utils/emergencyDetector.ts`.
+`npx tsc --noEmit --strict --target es2020 server/src/utils/emergencyDetector.ts`.
+(The explicit `--target` matters: file-arg tsc ignores tsconfig.json and defaults
+to the ES5 lib, which silently bans `.includes`/`.endsWith` and made runs flaky.)
 
 Keep a **proven fallback task** ready in case the headline one has an off day: the
 word-boundary false-positive fix (already succeeds reliably). Have both task JSONs
@@ -94,7 +96,7 @@ Task JSON schema:
   "body": "<full description as above>",
   "labels": ["bug"],
   "allowed_paths": ["server/**"],
-  "focused_test_command": "npx tsc --noEmit --strict server/src/utils/emergencyDetector.ts",
+  "focused_test_command": "npx tsc --noEmit --strict --target es2020 server/src/utils/emergencyDetector.ts",
   "max_attempts": 3
 }
 ```
