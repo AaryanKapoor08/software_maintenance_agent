@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -9,6 +10,25 @@ from dataclasses import dataclass
 
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+MAX_RETRY_DELAY_SECONDS = 90.0
+
+
+def _retry_delay_seconds(error_body: str) -> float:
+    """Extract the server-suggested retry delay from a 429 response body.
+
+    Gemini rate-limit errors carry 'Please retry in 38.5s' text and a RetryInfo
+    detail; honoring it lets a run ride out a rate-limit window instead of
+    failing after back-to-back short retries.
+    """
+    match = re.search(r"retry in ([0-9.]+)s", error_body) or re.search(
+        r'"retryDelay":\s*"([0-9.]+)s"', error_body
+    )
+    if not match:
+        return 0.0
+    try:
+        return min(float(match.group(1)) + 1.0, MAX_RETRY_DELAY_SECONDS)
+    except ValueError:
+        return 0.0
 
 
 class LLMError(RuntimeError):
@@ -76,18 +96,22 @@ class GeminiProvider(LLMProvider):
         )
         last_error = "unknown error"
         for attempt in range(3):
+            delay = 2.0 * (attempt + 1)
             try:
                 with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
                     body = json.loads(response.read().decode("utf-8"))
                 return self._extract_json(body)
             except urllib.error.HTTPError as exc:
-                detail = exc.read().decode("utf-8", errors="replace")[:400]
-                last_error = f"Gemini API returned HTTP {exc.code}: {detail}"
+                detail = exc.read().decode("utf-8", errors="replace")
+                last_error = f"Gemini API returned HTTP {exc.code}: {detail[:400]}"
                 if exc.code not in (429, 500, 502, 503):
                     raise LLMError(last_error) from exc
+                if exc.code == 429:
+                    delay = max(delay, _retry_delay_seconds(detail))
             except (urllib.error.URLError, TimeoutError, OSError) as exc:
                 last_error = f"Gemini API request failed: {exc}"
-            time.sleep(2 * (attempt + 1))
+            if attempt < 2:
+                time.sleep(delay)
         raise LLMError(last_error)
 
     @staticmethod
