@@ -1,0 +1,25 @@
+{
+  "id": "medbuddy_word_boundary",
+  "source": "github_issue",
+  "repo_url": "https://github.com/AaryanKapoor08/medbuddy",
+  "issue_number": null,
+  "title": "Emergency detector has substring false positives",
+  "body": "detectEmergency() matches keywords as raw substrings, so harmless words trigger emergencies: 'keystroke' matches 'stroke', 'weakened' matches 'weak', 'monitoring' matches nothing but 'falling asleep' matches 'fallen'? Match keywords only at word boundaries (case-insensitive), so 'I was typing a keystroke' is NOT an emergency but 'I think I am having a stroke' IS. Multi-word keywords must still match as phrases. Keep the exported API and severity precedence unchanged.",
+  "labels": [
+    "bug"
+  ],
+  "base_branch": "main",
+  "allowed_paths": [
+    "server/**"
+  ],
+  "blocked_paths": [
+    ".github/**",
+    ".env*",
+    "*lock*",
+    "secrets/**"
+  ],
+  "max_attempts": 3,
+  "focused_test_command": "npx tsc --noEmit --strict server/src/utils/emergencyDetector.ts",
+  "expected_relevant_files": [],
+  "expected_changed_files": []
+}
