@@ -187,6 +187,28 @@ class SoftwareMaintainceAgent:
             if not changes:
                 changes = heuristic.plan_changes(repo_dir, task, selected_files, attempt_number)
             if not changes:
+                if llm_patcher and attempt_number < task.max_attempts:
+                    attempts.append(
+                        PatchAttempt(
+                            attempt=attempt_number,
+                            result="failed",
+                            failure_reason="Patcher proposed no effective change.",
+                        )
+                    )
+                    trace.event(
+                        run_id,
+                        "attempt",
+                        f"Patch attempt {attempt_number} proposed no effective change; retrying",
+                        {"attempt": attempt_number},
+                    )
+                    feedback = {
+                        "command": "patch planning",
+                        "failure_summary": "Your previous response contained no effective changes: "
+                        "every file was empty or identical to its current content. "
+                        "Return complete new file content that actually differs.",
+                        "output": "",
+                    }
+                    continue
                 attempts.append(
                     PatchAttempt(
                         attempt=attempt_number,
