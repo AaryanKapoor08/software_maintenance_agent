@@ -14,6 +14,7 @@ build/
 *.egg-info/
 runs/
 .codegraph/
+ROADMAP.md
 tmp/
 .tmp/
 .coverage
