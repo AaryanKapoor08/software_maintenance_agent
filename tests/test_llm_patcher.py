@@ -77,6 +77,7 @@ def test_llm_patcher_feedback_lands_in_prompt(tmp_path: Path) -> None:
     prompt = provider.prompts[0]
     assert "AssertionError: boom" in prompt
     assert "did not pass" in prompt
+    assert "restructure the code differently" in prompt
     assert "src/app.py" in prompt
 
 

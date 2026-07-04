@@ -207,7 +207,9 @@ class LLMPatcher:
             if attempt > 1:
                 sections.append(
                     "Your previous patch (already applied to the files shown below) did not pass. "
-                    "Analyze the failure output and fix the remaining problem."
+                    "Analyze the failure output and fix the remaining problem. If this failure "
+                    "resembles the previous attempt's, your approach itself is likely the cause: "
+                    "restructure the code differently instead of regenerating a similar version."
                 )
         file_parts: list[str] = []
         for rel_path in list(dict.fromkeys(selected_files))[:MAX_PROMPT_FILES]:
