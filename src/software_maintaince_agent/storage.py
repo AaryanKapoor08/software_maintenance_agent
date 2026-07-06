@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -15,8 +17,16 @@ class TraceStore:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
-    def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.db_path)
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        # sqlite3's own context manager commits/rolls back but never closes;
+        # the leaked handle keeps trace.sqlite locked on Windows.
+        conn = sqlite3.connect(self.db_path)
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
 
     def _init_schema(self) -> None:
         with self._connect() as conn:
@@ -134,6 +144,24 @@ class TraceStore:
                 "kind": row[2],
                 "message": row[3],
                 "data": json.loads(row[4]),
+            }
+            for row in rows
+        ]
+
+    def list_runs(self) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT run_id, task_id, status, run_dir, started_at, updated_at FROM runs"
+                " ORDER BY started_at DESC"
+            ).fetchall()
+        return [
+            {
+                "run_id": row[0],
+                "task_id": row[1],
+                "status": row[2],
+                "run_dir": row[3],
+                "started_at": row[4],
+                "updated_at": row[5],
             }
             for row in rows
         ]

@@ -50,7 +50,7 @@ Python repos verify with pytest; Node/TypeScript repos verify with `npm test`/`n
 
 ## Included Pieces
 
-- Command line tools for running a task, viewing a trace, starting the dashboard, and running the benchmark.
+- Command line tools for running a task (single or batch), viewing a trace, listing run history and stats, viewing reports, pruning old runs, starting the dashboard, and running the benchmark.
 - Docker sandbox with per-run containers and network isolation; local sandbox for trusted fixtures.
 - Basic project inspection for Python repositories.
 - File selection from issue text, logs, paths, and code content.
@@ -79,6 +79,27 @@ python -m software_maintaince_agent.cli run --task <task.json> --sandbox docker 
 ```
 
 After a successful run against a remote repository, `--create-pr` pushes the patch to a fresh `ama/<run_id>` branch (never the default branch) and opens a **draft** pull request via the `gh` CLI when it is authenticated. The branch push and PR URL are recorded in the run trace and `publish.json`.
+
+## Run history
+
+```bash
+python -m software_maintaince_agent.cli runs                  # list past runs, newest first
+python -m software_maintaince_agent.cli runs --status FINALIZED_SUCCESS
+python -m software_maintaince_agent.cli stats                 # success rate and per-task counts
+python -m software_maintaince_agent.cli report --run-id <run_id>
+python -m software_maintaince_agent.cli clean --keep 10       # preview prune of old runs
+python -m software_maintaince_agent.cli clean --keep 10 --force
+```
+
+`runs` and `stats` index the `runs/` directory from each run's `trace.sqlite`. `clean` previews by default and only deletes with `--force`; `--keep N` and `--older-than-days D` combine conservatively (a run must match both to be pruned).
+
+## Batch runs
+
+```bash
+python -m software_maintaince_agent.cli run-batch --tasks-dir examples/tasks --sandbox docker
+```
+
+Runs every task JSON in the directory, prints a summary table, and exits non-zero if any task did not succeed (useful for CI smoke checks).
 
 ## Benchmark
 

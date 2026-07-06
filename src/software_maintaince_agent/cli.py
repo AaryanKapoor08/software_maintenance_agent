@@ -6,6 +6,7 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.table import Table
 
 from software_maintaince_agent.agent import SoftwareMaintainceAgent, load_task
@@ -13,6 +14,12 @@ from software_maintaince_agent.dashboard import serve_dashboard
 from software_maintaince_agent.evals.benchmark import run_retrieval_benchmark
 from software_maintaince_agent.github_integration import fetch_issue_task
 from software_maintaince_agent.publisher import PublishError, publish_patch
+from software_maintaince_agent.run_index import (
+    list_run_records,
+    prune_runs,
+    select_prunable_runs,
+    summarize_runs,
+)
 from software_maintaince_agent.settings import Settings
 from software_maintaince_agent.storage import TraceStore
 
@@ -124,6 +131,157 @@ def trace(
             event["message"],
         )
     console.print(table)
+
+
+@app.command()
+def run_batch(
+    tasks_dir: Annotated[Path, typer.Option("--tasks-dir", help="Directory of task JSON files.")] = Path(
+        "examples/tasks"
+    ),
+    sandbox: Annotated[str, typer.Option("--sandbox", help="Sandbox adapter: docker, local, or e2b.")] = "docker",
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Validate and plan without edits.")] = False,
+    runs_dir: Annotated[Path | None, typer.Option("--runs-dir", help="Override runs directory.")] = None,
+) -> None:
+    """Run every task JSON in a directory and print a summary table."""
+    task_files = sorted(tasks_dir.glob("*.json"))
+    if not task_files:
+        raise typer.BadParameter(f"No task JSON files found in: {tasks_dir}")
+    settings = Settings.from_env()
+    agent = SoftwareMaintainceAgent(settings)
+    results: list[tuple[str, str, str, str]] = []
+    any_failed = False
+    for task_file in task_files:
+        try:
+            maintenance_task = load_task(task_file)
+            report = agent.run_task(
+                maintenance_task,
+                sandbox_kind=sandbox,
+                dry_run=dry_run,
+                runs_dir=runs_dir,
+            )
+            status, risk = report.status, report.risk_level
+            detail = report.report_path or ""
+        except Exception as exc:  # keep the batch going when one task blows up
+            status, risk, detail = "error", "-", str(exc)
+        if status != "success":
+            any_failed = True
+        results.append((task_file.name, status, risk, detail))
+    table = Table(title=f"Batch: {len(task_files)} task(s) from {tasks_dir}")
+    table.add_column("Task file")
+    table.add_column("Status")
+    table.add_column("Risk")
+    table.add_column("Report")
+    for name, status, risk, detail in results:
+        color = "green" if status == "success" else "red"
+        table.add_row(name, f"[{color}]{status}[/{color}]", risk, detail)
+    console.print(table)
+    if any_failed:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def runs(
+    runs_dir: Annotated[Path, typer.Option("--runs-dir", help="Runs directory.")] = Path("runs"),
+    limit: Annotated[int, typer.Option("--limit", help="Show at most N runs (0 = all).")] = 20,
+    status: Annotated[str | None, typer.Option("--status", help="Filter by run state, e.g. FINALIZED_SUCCESS.")] = None,
+) -> None:
+    """List past runs, newest first."""
+    records = list_run_records(runs_dir, status=status)
+    if not records:
+        console.print(f"No runs found in {runs_dir}.")
+        return
+    shown = records if limit == 0 else records[:limit]
+    table = Table(title=f"Runs ({len(shown)} of {len(records)})")
+    table.add_column("Run ID", overflow="fold")
+    table.add_column("Task", overflow="fold")
+    table.add_column("Status")
+    table.add_column("Started")
+    table.add_column("Patch")
+    table.add_column("Report")
+    for record in shown:
+        color = (
+            "green"
+            if record.status == "FINALIZED_SUCCESS"
+            else "red"
+            if record.status in ("FINALIZED_FAILED", "ESCALATED")
+            else "yellow"
+        )
+        table.add_row(
+            record.run_id,
+            record.task_id,
+            f"[{color}]{record.status}[/{color}]",
+            record.started_at.replace("T", " ")[:19],
+            "yes" if record.has_patch else "-",
+            "yes" if record.has_report else "-",
+        )
+    console.print(table)
+
+
+@app.command()
+def stats(
+    runs_dir: Annotated[Path, typer.Option("--runs-dir", help="Runs directory.")] = Path("runs"),
+) -> None:
+    """Aggregate outcomes across all runs."""
+    records = list_run_records(runs_dir)
+    if not records:
+        console.print(f"No runs found in {runs_dir}.")
+        return
+    summary = summarize_runs(records)
+    table = Table(title="Run Statistics")
+    table.add_column("Metric")
+    table.add_column("Value", justify="right")
+    table.add_row("Total runs", str(summary.total))
+    table.add_row("Succeeded", f"[green]{summary.succeeded}[/green]")
+    table.add_row("Failed / escalated", f"[red]{summary.failed}[/red]")
+    table.add_row("In progress / other", str(summary.in_progress))
+    table.add_row("Success rate", f"{summary.success_rate:.1%}")
+    console.print(table)
+    by_task = Table(title="Runs by Task")
+    by_task.add_column("Task")
+    by_task.add_column("Runs", justify="right")
+    for task_id, count in sorted(summary.by_task.items(), key=lambda item: -item[1]):
+        by_task.add_row(task_id, str(count))
+    console.print(by_task)
+
+
+@app.command()
+def report(
+    run_id: Annotated[str, typer.Option("--run-id", help="Run id under runs/.")],
+    runs_dir: Annotated[Path, typer.Option("--runs-dir", help="Runs directory.")] = Path("runs"),
+) -> None:
+    """Show the final report for a run."""
+    report_path = runs_dir / run_id / "final_report.md"
+    if not report_path.is_file():
+        raise typer.BadParameter(f"No final report found: {report_path}")
+    console.print(Markdown(report_path.read_text(encoding="utf-8")))
+
+
+@app.command()
+def clean(
+    runs_dir: Annotated[Path, typer.Option("--runs-dir", help="Runs directory.")] = Path("runs"),
+    keep: Annotated[int | None, typer.Option("--keep", help="Keep only the N most recent runs.")] = None,
+    older_than_days: Annotated[
+        int | None, typer.Option("--older-than-days", help="Only prune runs older than N days.")
+    ] = None,
+    force: Annotated[bool, typer.Option("--force", help="Actually delete; otherwise just preview.")] = False,
+) -> None:
+    """Prune old run directories. Preview by default; pass --force to delete."""
+    if keep is None and older_than_days is None:
+        raise typer.BadParameter("Provide --keep and/or --older-than-days.")
+    candidates = select_prunable_runs(runs_dir, keep=keep, older_than_days=older_than_days)
+    if not candidates:
+        console.print("Nothing to prune.")
+        return
+    for record in candidates:
+        console.print(f"  {record.run_id} ({record.status}, started {record.started_at[:19]})")
+    if not force:
+        console.print(
+            f"[yellow]Preview only:[/yellow] {len(candidates)} run(s) would be deleted. "
+            "Re-run with --force to delete."
+        )
+        return
+    deleted = prune_runs(candidates)
+    console.print(f"[bold]Deleted {len(deleted)} run(s).[/bold]")
 
 
 @app.command()
